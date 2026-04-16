@@ -15,9 +15,7 @@ TMS - Transport Management System
 Aplicación web para gestionar reservas de servicio de transporte. El usuario define origen, destino, fecha/hora, cantidad de pasajeros y otras especificaciones pormenores.
 
 ### Modelo
-![imagen del modelo]("./TP Desarrollo de Software - Diagrama de clases.png")
-
-*Nota*: incluir un link con la imagen de un modelo, puede ser modelo de dominio, diagrama de clases, DER. Si lo prefieren pueden utilizar diagramas con [Mermaid](https://mermaid.js.org) en lugar de imágenes.
+![imagen del modelo](./TP Desarrollo de Software - Diagrama de clases.png)
 
 ## Alcance Funcional 
 
