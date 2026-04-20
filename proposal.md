@@ -2,7 +2,7 @@
 
 ## Grupo
 ### Integrantes
-*       - Gonzalez Eduardo
+*       - Gonzalez, Eduardo
 * 36640 - Mayer, Rodrigo
 
 ### Repositorios
@@ -12,7 +12,7 @@
 ## Tema
 TMS - Transport Management System
 ### Descripción
-Aplicación web para gestionar reservas de servicio de transporte. El usuario define origen, destino, fecha/hora, cantidad de pasajeros y otras especificaciones pormenores.
+Aplicación web orientada a la gestión integral de reservas de servicios de transporte, permitiendo a los usuarios solicitar viajes indicando origen, destino, fecha, horario, cantidad de pasajeros y requerimientos específicos, facilitando la asignación y administración eficiente de vehículos y reservas.
 
 ### Modelo
 ![imagen del modelo](./TPDesarrollodeSoftware-Diagramadeclases.png)
