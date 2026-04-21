@@ -2,7 +2,7 @@
 
 ## Grupo
 ### Integrantes
-*       - Gonzalez, Eduardo
+* 25912 - Gonzalez, Eduardo
 * 36640 - Mayer, Rodrigo
 
 ### Repositorios
