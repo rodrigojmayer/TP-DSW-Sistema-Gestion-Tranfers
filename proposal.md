@@ -26,7 +26,7 @@ Regularidad:
 |:-|:-|
 |CRUD simple|1. CRUD Usuario<br>2. CRUD Ruta|
 |CRUD dependiente|1. CRUD Viaje {depende de} CRUD Usuario y CRUD Ruta|
-|Listado<br>+<br>detalle| 1. Listado de viajes filtrado por ruta, muestra fecha/hora y espacio disponible (pasajeros y equipaje) => detalle CRUD Viaje|
+|Listado<br>+<br>detalle| 1. Listado de viajes filtrado por ruta, muestra fecha/hora, con puntos medios y espacio disponible entre cada punto (pasajeros y equipaje) => detalle CRUD Viaje|
 |CUU/Epic|1. Reservar un viaje|
 
 
@@ -34,7 +34,7 @@ Adicionales para Aprobación
 |Req|Detalle|
 |:-|:-|
 |CRUD |1. CRUD ModeloVehiculo<br>2. CRUD Vehiculo<br>3. CRUD AgendaVehiculo|
-|CUU/Epic|1. Cargar nuevo modelo de vehiculo<br>2. Cargar nuevo vehiculo<br>3. Actualizar la agenda de un vehiculo manualmente|
+|CUU/Epic|1. Cancelación de reserva<br>2. Actualizar la agenda de un vehiculo manualmente|
 
 
 ### Alcance Adicional Voluntario
@@ -42,6 +42,6 @@ Adicionales para Aprobación
 |Req|Detalle|
 |:-|:-|
 |Listados |1. Viajes del día filtrado por fecha muestra, usuario, vehiculo, fecha/hora origen, fecha/hora destino, origen, destino, precioTotal|
-|CUU/Epic|1. Cancelación de reserva|
+|CUU/Epic|1. Trazabilidad de pago|
 |Otros|1. Envío de recordatorio de reserva por email|
 
