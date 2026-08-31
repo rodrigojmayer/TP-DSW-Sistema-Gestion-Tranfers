@@ -1,17 +1,26 @@
 
+
 export type RolUsuario = 'ADMIN' | 'CLIENTE' | 'OPERADOR' | 'CHOFER';
 
-
-// --- USUARIO ---
 export interface Usuario {
-  idUsuario: string | number;
+  idUsuario: string;
   usuario: string;
-  // password: string; -> Normalmente no viaja al frontend por seguridad
   nombre: string;
   apellido: string;
   email: string;
   telefono: string;
-  rol: string;
+  rol: RolUsuario;
+  // Campos exclusivos para Choferes (opcionales)
+  nroLicencia?: string;
+  vencimientoLicencia?: string;
+}
+
+export interface Pasajero {
+  idPasajero: string;
+  nombre: string;
+  apellido: string;
+  dni: string;
+  idReserva?: string; // Para saber a qué reserva pertenece
 }
 
 // --- VEHÍCULOS Y AGENDA ---
@@ -85,3 +94,6 @@ export interface ReservaCompartido extends ReservaViajeBase {
 
 // Tipo global exportable que el frontend usará para evaluar la UI
 export type ReservaViaje = ReservaPrivado | ReservaCompartido;
+
+
+
