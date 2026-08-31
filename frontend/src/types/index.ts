@@ -62,6 +62,16 @@ export interface Ruta {
   // Relación 1 a 2..N
   puntosRuta?: PuntoRuta[];
 }
+export interface Viaje {
+  idViaje: string;
+  idRuta: string;
+  idChofer: string;
+  fechaHoraSalida: string;
+  precio: number;
+  estado: 'PROGRAMADO' | 'EN_CURSO' | 'FINALIZADO' | 'CANCELADO';
+}
+
+
 
 // --- RESERVAS (Herencia) ---
 export interface ReservaViajeBase {

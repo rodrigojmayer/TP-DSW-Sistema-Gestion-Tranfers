@@ -1,76 +1,27 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AdminLayout } from '../layouts/AdminLayout';
 import { UsuariosPage } from '../features/usuarios/pages/UsuariosPage';
+import { RutasPage } from '../features/rutas/pages/RutasPage';
+import { ViajesPage } from '../features/viajes/pages/ViajesPage'; // <-- Importar
 
-export const AppRoutes = () => {
-  return (
-    <Routes>
-      <Route element={<AdminLayout />}>
-        {/* Aquí conectamos el CRUD real de Usuarios */}
-        <Route path="/usuarios" element={<UsuariosPage />} />
+export const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <AdminLayout />, // El Layout envuelve a sus "children"
+    children: [
+      // Redirección por defecto al entrar a la raíz "/"
+      { index: true, element: <Navigate to="/usuarios" replace /> },
 
-        {/* Estos siguen siendo placeholders hasta que hagamos su rama */}
-        <Route
-          path="/rutas"
-          element={
-            <div className="p-4 bg-white rounded shadow">
-              Módulo de Rutas (En construcción)
-            </div>
-          }
-        />
-        <Route
-          path="/viajes"
-          element={
-            <div className="p-4 bg-white rounded shadow">
-              Módulo de Viajes (En construcción)
-            </div>
-          }
-        />
-      </Route>
-
-      <Route path="*" element={<Navigate to="/usuarios" replace />} />
-    </Routes>
-  );
-};
-
-// // anterior
-
-// import { Routes, Route, Navigate } from 'react-router-dom';
-// import { AdminLayout } from '../layouts/AdminLayout';
-
-// export const AppRoutes = () => {
-//   return (
-//     <Routes>
-//       <Route element={<AdminLayout />}>
-//         {/* Placeholder temporal hasta crear la Feature de Usuarios */}
-//         <Route
-//           path="/usuarios"
-//           element={
-//             <div className="p-4 bg-white rounded shadow">
-//               Módulo de Usuarios (En construcción)
-//             </div>
-//           }
-//         />
-//         <Route
-//           path="/rutas"
-//           element={
-//             <div className="p-4 bg-white rounded shadow">
-//               Módulo de Rutas (En construcción)
-//             </div>
-//           }
-//         />
-//         <Route
-//           path="/viajes"
-//           element={
-//             <div className="p-4 bg-white rounded shadow">
-//               Módulo de Viajes (En construcción)
-//             </div>
-//           }
-//         />
-//       </Route>
-
-//       {/* Redirección por defecto */}
-//       <Route path="*" element={<Navigate to="/usuarios" replace />} />
-//     </Routes>
-//   );
-// };
+      { path: 'usuarios', element: <UsuariosPage /> },
+      { path: 'rutas', element: <RutasPage /> },
+      { path: 'viajes', element: <ViajesPage /> },
+       
+      
+    ],
+  },
+  // Catch-all para rutas que no existen (Error 404 manejado como redirección)
+  {
+    path: '*',
+    element: <Navigate to="/usuarios" replace />,
+  },
+]);
