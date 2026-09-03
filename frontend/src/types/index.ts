@@ -1,19 +1,31 @@
-
-
 export type RolUsuario = 'ADMIN' | 'CLIENTE' | 'OPERADOR' | 'CHOFER';
+
 
 export interface Usuario {
   idUsuario: string;
-  usuario: string;
   nombre: string;
   apellido: string;
   email: string;
-  telefono: string;
+  dni?: string; // <-- Propiedad agregada (opcional)
+  telefono?: string;
   rol: RolUsuario;
-  // Campos exclusivos para Choferes (opcionales)
-  nroLicencia?: string;
-  vencimientoLicencia?: string;
 }
+
+
+
+
+// export interface Usuario {
+//   idUsuario: string;
+//   usuario: string;
+//   nombre: string;
+//   apellido: string;
+//   email: string;
+//   telefono: string;
+//   rol: RolUsuario;
+//   // Campos exclusivos para Choferes (opcionales)
+//   nroLicencia?: string;
+//   vencimientoLicencia?: string;
+// }
 
 export interface Pasajero {
   idPasajero: string;
@@ -71,8 +83,6 @@ export interface Viaje {
   estado: 'PROGRAMADO' | 'EN_CURSO' | 'FINALIZADO' | 'CANCELADO';
 }
 
-
-
 // --- RESERVAS (Herencia) ---
 export interface ReservaViajeBase {
   idViaje: string | number;
@@ -105,5 +115,39 @@ export interface ReservaCompartido extends ReservaViajeBase {
 // Tipo global exportable que el frontend usará para evaluar la UI
 export type ReservaViaje = ReservaPrivado | ReservaCompartido;
 
+// export type EstadoReserva = 'RESERVADO' | 'PAGADO' | 'CANCELADO';
+
+// export interface Reserva {
+//   idReserva: string;
+//   idViaje: string;
+//   idPasajero: string;
+//   asiento: number;
+//   precioFinal: number;
+//   estado: EstadoReserva;
+//   fechaReserva: string;
+// }
+
+// modificado usuario logueado y sin loguear
 
 
+export type EstadoReserva = 'RESERVADO' | 'PAGADO' | 'CANCELADO';
+
+export interface PasajeroDatos {
+  nombre: string;
+  apellido: string;
+  dni: string;
+  email: string;
+  telefono: string;
+}
+
+export interface Reserva {
+  idReserva: string;
+  idViaje: string;
+  tipoReserva: 'LOGUEADO' | 'INVITADO';
+  idCliente?: string; // Presente solo si el cliente estaba autenticado
+  pasajero: PasajeroDatos; // Datos finales de la persona que se sube al vehículo
+  asiento: number;
+  precioFinal: number;
+  estado: EstadoReserva;
+  fechaReserva: string;
+}

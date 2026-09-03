@@ -36,6 +36,10 @@ export const Sidebar = () => {
             <PaperAirplaneIcon className="w-5 h-5" />
             Viajes
           </NavLink>
+          <NavLink to="/reservas" className={linkStyles}>
+            <PaperAirplaneIcon className="w-5 h-5" />
+            Reservas
+          </NavLink>
         </nav>
       </div>
     </aside>

@@ -3,7 +3,7 @@ import { AdminLayout } from '../layouts/AdminLayout';
 import { UsuariosPage } from '../features/usuarios/pages/UsuariosPage';
 import { RutasPage } from '../features/rutas/pages/RutasPage';
 import { ViajesPage } from '../features/viajes/pages/ViajesPage'; // <-- Importar
-
+import { ReservasPage } from '../features/reservas/pages/ReservasPage'; // <-- Importar
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -15,8 +15,7 @@ export const router = createBrowserRouter([
       { path: 'usuarios', element: <UsuariosPage /> },
       { path: 'rutas', element: <RutasPage /> },
       { path: 'viajes', element: <ViajesPage /> },
-       
-      
+      { path: 'reservas', element: <ReservasPage /> }, // Ruta agregada
     ],
   },
   // Catch-all para rutas que no existen (Error 404 manejado como redirección)
