@@ -12,27 +12,40 @@ import type { RolUsuario } from '../../../types';
 // ];
 
 // Al castearlo usando tu tipo global, TypeScript y React Hook Form sabrán exactamente qué valores son válidos
-const ROLES_INTERNOS = ['ADMIN', 'OPERADOR', 'CHOFER'] as [RolUsuario, ...RolUsuario[]];
+
+
+const ROLES_INTERNOS = ['ADMIN', 'OPERADOR', 'CHOFER'] as [
+  RolUsuario,
+  ...RolUsuario[],
+];
 
 export const usuarioSchema = z
   .object({
     usuario: z
       .string()
-      .min(3, { message: 'El usuario debe tener al menos 3 caracteres' }),
-    nombre: z.string().min(2, { message: 'El nombre es obligatorio' }),
-    apellido: z.string().min(2, { message: 'El apellido es obligatorio' }),
+      .min(3, { error: 'El usuario debe tener al menos 3 caracteres' }), // En v4 se usa 'error'
+    dni: z
+      .string()
+      .min(6, 'El DNI debe tener al menos 6 números')
+      .max(8, 'El DNI no puede tener más de 8 números')
+      .regex(/^[0-9]+$/, 'El DNI solo debe contener números'),
+    nombre: z.string().min(2, { error: 'El nombre es obligatorio' }),
+    apellido: z.string().min(2, { error: 'El apellido es obligatorio' }),
+
+    // ✅ CORRECCIÓN PARA ZOD V4 (Sin warnings de desuso ni errores de nombres externos):
     email: z
       .string()
-      .min(1, { message: 'El email es obligatorio' })
-      .email({ message: 'Debe ser un email válido' }),
+      .trim()
+      .min(1, 'El email es obligatorio')
+      .pipe(z.email('Debe ser un email válido')),
+
     telefono: z
       .string()
-      .min(8, { message: 'El teléfono debe tener al menos 8 dígitos' }),
+      .min(8, { error: 'El teléfono debe tener al menos 8 dígitos' }),
     rol: z.enum(ROLES_INTERNOS),
     nroLicencia: z.string().optional(),
     vencimientoLicencia: z.string().optional(),
   })
-  // ... (el resto del superRefine queda igual)
   .superRefine((data, ctx) => {
     // Validación condicional: Si es chofer, exigimos los datos extra
     if (data.rol === 'CHOFER') {
@@ -61,25 +74,3 @@ export type UsuarioFormData = z.infer<typeof usuarioSchema>;
 
 
 
-// import { z } from 'zod';
-// import type { RolUsuario } from '../../../types';
-
-// // Definimos una tupla estricta con los valores reales de tu tipo
-
-// const ROLES_VALIDOS: [RolUsuario, ...RolUsuario[]] = [
-//   'ADMIN',
-//   'CLIENTE',
-//   'OPERADOR',
-//   'CHOFER'
-// ];
-
-// export const usuarioSchema = z.object({
-//   usuario: z.string().min(3, 'El usuario debe tener al menos 3 caracteres'),
-//   nombre: z.string().min(2, 'El nombre es obligatorio'),
-//   apellido: z.string().min(2, 'El apellido es obligatorio'),
-//   email: z.string().email('Debe ser un email válido'),
-//   telefono: z.string().min(8, 'El teléfono debe tener al menos 8 dígitos'),
-//   rol: z.enum(ROLES_VALIDOS), // <-- Aquí se lee 'RolUsuario', eliminando el error
-// });
-
-// export type UsuarioFormData = z.infer<typeof usuarioSchema>;

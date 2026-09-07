@@ -1,12 +1,12 @@
 import {
   UserCircleIcon,
-  ArrowRightOnRectangleIcon,
+  ArrowRightStartOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 
 export const Navbar = () => {
   return (
-    <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-      <h1 className="text-slate-800 font-semibold text-lg">
+    <header className="bg-white border-b border-slate-200 px-6 py-1 flex justify-between items-center">
+      <h1 className="text-slate-500 font-semibold text-sd">
         Panel de Administración
       </h1>
 
@@ -20,7 +20,7 @@ export const Navbar = () => {
           className="p-1.5 text-slate-500 hover:text-red-600 transition"
           title="Cerrar Sesión"
         >
-          <ArrowRightOnRectangleIcon className="w-5 h-5" />
+          <ArrowRightStartOnRectangleIcon className="w-5 h-5" />
         </button>
       </div>
     </header>

@@ -3,29 +3,19 @@ export type RolUsuario = 'ADMIN' | 'CLIENTE' | 'OPERADOR' | 'CHOFER';
 
 export interface Usuario {
   idUsuario: string;
+  usuario: string;
   nombre: string;
   apellido: string;
   email: string;
   dni?: string; // <-- Propiedad agregada (opcional)
   telefono?: string;
   rol: RolUsuario;
+  // Campos exclusivos para Choferes (opcionales)
+    nroLicencia?: string;
+    vencimientoLicencia?: string;
 }
 
 
-
-
-// export interface Usuario {
-//   idUsuario: string;
-//   usuario: string;
-//   nombre: string;
-//   apellido: string;
-//   email: string;
-//   telefono: string;
-//   rol: RolUsuario;
-//   // Campos exclusivos para Choferes (opcionales)
-//   nroLicencia?: string;
-//   vencimientoLicencia?: string;
-// }
 
 export interface Pasajero {
   idPasajero: string;

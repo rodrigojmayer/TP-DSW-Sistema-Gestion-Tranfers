@@ -148,13 +148,36 @@ export const ViajesPage = () => {
             {...register('fechaHoraSalida')}
           />
 
-          <Input
+          {/* Campo Precio del Pasaje con prefijo $ integrado */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-slate-700">
+              Precio del Pasaje
+            </label>
+            <div className="relative flex items-center w-full h-10 border border-slate-300 rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-amber-400">
+              <span className="pl-3 pr-1.5 text-sm font-semibold text-slate-400 select-none">
+                $
+              </span>
+              <input
+                type="number"
+                step="0.01"
+                {...register('precio', { valueAsNumber: true })}
+                className="w-full h-full pr-3 py-2 bg-transparent text-sm text-slate-800 outline-none"
+              />
+            </div>
+            {errors.precio?.message && (
+              <span className="text-xs text-red-500 font-medium">
+                {errors.precio.message}
+              </span>
+            )}
+          </div>
+
+          {/* <Input
             type="number"
             step="0.01"
             label="Precio del Pasaje ($)"
             error={errors.precio?.message}
             {...register('precio')}
-          />
+          /> */}
 
           <Button type="submit" isLoading={isSubmitting}>
             Programar Servicio
