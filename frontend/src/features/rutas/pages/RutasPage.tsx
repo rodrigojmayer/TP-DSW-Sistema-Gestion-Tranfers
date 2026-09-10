@@ -1,6 +1,6 @@
 // src/features/rutas/pages/RutasPage.tsx
 import { useEffect, useState } from 'react';
-import { type Ruta } from '../../../types';
+import type { Ruta } from '../../../types';
 import { rutaService } from '../api/rutaService';
 import { RutaForm } from '../components/RutaForm';
 
@@ -109,7 +109,11 @@ export const RutasPage = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {rutas.map((ruta, idx) => {
-                  const puntosOrdenados = [...(ruta.puntosRuta || [])].sort(
+                  // 1. Accedemos a la propiedad que devuelve Prisma (puntos) o fallback
+                  const listaPuntos = ruta.puntos || ruta.puntosRuta || [];
+
+                  // 2. Ordenamos por la columna 'orden'
+                  const puntosOrdenados = [...listaPuntos].sort(
                     (a, b) => (a.orden ?? 0) - (b.orden ?? 0),
                   );
 
@@ -127,8 +131,9 @@ export const RutasPage = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-xs text-slate-500">
+                        {/* 3. Extraemos el nombre o dirección desde p.punto */}
                         {puntosOrdenados
-                          .map((p) => p.direccion)
+                          .map((p) => p.punto?.nombre || p.punto?.direccion || p.direccion)
                           .filter(Boolean)
                           .join(' ➔ ') || 'Sin paradas'}
                       </td>

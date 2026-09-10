@@ -1,10 +1,11 @@
 // src/features/rutas/components/RutaForm.tsx
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useFieldArray, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { rutaSchema, type RutaFormData } from '../schemas/rutaSchema';
 import { rutaService } from '../api/rutaService';
-import { type Ruta } from '../../../types';
+import { puntoService } from '../../puntos/api/puntoService';
+import type { Ruta, Punto } from '../../../types';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 
@@ -19,7 +20,25 @@ export const RutaForm = ({
   onCancelEdit,
   onSuccess,
 }: RutaFormProps) => {
-  // PASO 1: Configurar el formulario con Zod
+  const [catalogoPuntos, setCatalogoPuntos] = useState<Punto[]>([]);
+  const [cargandoPuntos, setCargandoPuntos] = useState(true);
+
+  // 1. Cargar el catálogo de puntos registrados en la BD
+  useEffect(() => {
+    const obtenerCatalogo = async () => {
+      try {
+        const datos = await puntoService.obtenerTodos();
+        setCatalogoPuntos(datos);
+      } catch (error) {
+        console.error('Error al cargar catálogo de puntos:', error);
+      } finally {
+        setCargandoPuntos(false);
+      }
+    };
+    obtenerCatalogo();
+  }, []);
+
+  // 2. Formulario vinculado a Zod y la estructura { idPunto, orden }
   const {
     register,
     handleSubmit,
@@ -30,48 +49,50 @@ export const RutaForm = ({
     resolver: zodResolver(rutaSchema) as unknown as Resolver<RutaFormData>,
     defaultValues: {
       nombre: '',
-      puntosRuta: [
-        { direccion: '', orden: 0 },
-        { direccion: '', orden: 1 },
+      puntos: [
+        { idPunto: '', orden: 1 },
+        { idPunto: '', orden: 2 },
       ],
     },
   });
 
-  // PASO 2: Vincular useFieldArray al array 'puntosRuta'
+  // 3. Manejo dinámico del arreglo de paradas
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'puntosRuta',
+    name: 'puntos',
   });
 
-  // PASO 3: Sincronizar datos al Editar o Crear
+  // 4. Sincronización al editar o resetear formulario
   useEffect(() => {
     if (rutaAEditar) {
+      const listaPuntos = rutaAEditar.puntos || [];
+      const ordenados = [...listaPuntos].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
+
       reset({
         nombre: rutaAEditar.nombre,
-        // ✅ CORRECCIÓN: Usamos (rutaAEditar.puntosRuta ?? []) para garantizar que sea un Array
-        puntosRuta: (rutaAEditar.puntosRuta ?? []).map((p, index) => ({
-          direccion: p.direccion,
-          orden: index,
+        puntos: ordenados.map((p, index) => ({
+          idPunto: p.idPunto || p.punto?.idPunto || '',
+          orden: index + 1,
         })),
       });
     } else {
       reset({
         nombre: '',
-        puntosRuta: [
-          { direccion: '', orden: 0 },
-          { direccion: '', orden: 1 },
+        puntos: [
+          { idPunto: '', orden: 1 },
+          { idPunto: '', orden: 2 },
         ],
       });
     }
   }, [rutaAEditar, reset]);
 
-  // PASO 4: Función de envío
+  // 5. Envío al Backend mediante rutaService
   const onSubmit = async (data: RutaFormData) => {
     const datosConOrden = {
       ...data,
-      puntosRuta: data.puntosRuta.map((punto, index) => ({
-        ...punto,
-        orden: index,
+      puntos: data.puntos.map((item, index) => ({
+        idPunto: item.idPunto,
+        orden: index + 1,
       })),
     };
 
@@ -84,7 +105,7 @@ export const RutaForm = ({
     onSuccess();
   };
 
-  // PASO 5: Renderizado del Formulario
+  
   return (
     <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm h-fit">
       <div className="flex justify-between items-center mb-4">
@@ -111,7 +132,7 @@ export const RutaForm = ({
           {...register('nombre')}
         />
 
-        {/* Campos dinámicos: Array de Paradas */}
+        {/* Campos dinámicos: Array de Selección de Puntos */}
         <div className="space-y-3 pt-2">
           <div className="flex justify-between items-center">
             <label className="text-sm font-semibold text-slate-700">
@@ -120,7 +141,7 @@ export const RutaForm = ({
             {fields.length < 10 && (
               <button
                 type="button"
-                onClick={() => append({ direccion: '', orden: fields.length })}
+                onClick={() => append({ idPunto: '', orden: fields.length + 1 })}
                 className="text-xs font-medium text-amber-600 hover:text-amber-700 transition"
               >
                 + Agregar Parada
@@ -128,48 +149,58 @@ export const RutaForm = ({
             )}
           </div>
 
-          {/* Mapeo dinámico de inputs */}
-          {fields.map((field, index) => {
-            const isOrigen = index === 0;
-            const isDestino = index === fields.length - 1;
+          {cargandoPuntos ? (
+            <p className="text-xs text-slate-400">Cargando puntos...</p>
+          ) : (
+            fields.map((field, index) => {
+              const isOrigen = index === 0;
+              const isDestino = index === fields.length - 1;
 
-            let etiqueta = `Parada #${index}`;
-            if (isOrigen) etiqueta = '1. Origen';
-            else if (isDestino) etiqueta = `${fields.length}. Destino`;
+              let etiqueta = `Parada #${index + 1}`;
+              if (isOrigen) etiqueta = '1. Origen';
+              else if (isDestino) etiqueta = `${fields.length}. Destino`;
 
-            return (
-              <div
-                key={field.id}
-                className="flex items-start gap-2 bg-slate-50 p-3 rounded-md border border-slate-200"
-              >
-                <div className="flex-1">
-                  <Input
-                    label={etiqueta}
-                    placeholder={
-                      isOrigen
-                        ? 'Ej: Terminal Retiro'
-                        : isDestino
-                          ? 'Ej: Terminal Rosario'
-                          : 'Ej: San Pedro'
-                    }
-                    error={errors.puntosRuta?.[index]?.direccion?.message}
-                    {...register(`puntosRuta.${index}.direccion`)}
-                  />
+              return (
+                <div
+                  key={field.id}
+                  className="flex items-start gap-2 bg-slate-50 p-3 rounded-md border border-slate-200"
+                >
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-slate-600 mb-1">
+                      {etiqueta}
+                    </label>
+                    <select
+                      className="w-full text-sm border border-slate-300 rounded-md p-2 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      {...register(`puntos.${index}.idPunto`)}
+                    >
+                      <option value="">-- Seleccionar punto --</option>
+                      {catalogoPuntos.map((punto) => (
+                        <option key={punto.idPunto} value={punto.idPunto}>
+                          {punto.nombre ? `${punto.nombre} (${punto.direccion})` : punto.direccion}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.puntos?.[index]?.idPunto && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {errors.puntos[index]?.idPunto?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {fields.length > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => remove(index)}
+                      className="mt-6 p-2 text-slate-400 hover:text-red-600 transition"
+                      title="Eliminar parada"
+                    >
+                      🗑️
+                    </button>
+                  )}
                 </div>
-
-                {fields.length > 2 && (
-                  <button
-                    type="button"
-                    onClick={() => remove(index)}
-                    className="mt-7 p-2 text-slate-400 hover:text-red-600 transition"
-                    title="Eliminar parada"
-                  >
-                    🗑️
-                  </button>
-                )}
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         <Button type="submit" isLoading={isSubmitting}>

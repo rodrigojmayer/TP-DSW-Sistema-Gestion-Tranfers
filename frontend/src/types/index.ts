@@ -53,17 +53,47 @@ export interface AgendaVehiculo {
 
 // --- RUTAS (Para viajes compartidos) ---
 export interface PuntoRuta {
-  idPunto: string | number;
-  direccion: string;
+  idPuntoRuta?: string;
+  orden: number;
+  idPunto?: string;
+  direccion?: string; // Para compatibilidad
+  punto?: Punto;       // Relación proveniente del backend
+}
+
+export interface PuntoRutaInput {
+  idPunto: string;
   orden: number;
 }
 
-export interface Ruta {
-  idRuta: string | number;
+export interface CrearRutaDTO {
   nombre: string;
-  // Relación 1 a 2..N
-  puntosRuta?: PuntoRuta[];
+  puntos: PuntoRutaInput[];
 }
+
+export interface Ruta {
+    idRuta: string;
+    nombre: string;
+    puntos?: PuntoRuta[];
+    puntosRuta?: PuntoRuta[];
+    createdAt: string;
+    updatedAt: string;  
+}
+
+export interface Punto {
+    idPunto: string;
+    direccion: string;
+    nombre?: string;
+    createdAt: string;
+}
+
+export interface CrearRutaInput {
+    nombre: string;
+    puntos: {
+        idPunto: string;
+        orden: number;
+    }[];
+}
+
 export interface Viaje {
   idViaje: string;
   idRuta: string;

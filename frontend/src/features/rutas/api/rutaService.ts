@@ -1,159 +1,83 @@
-// // frontend/src/features/rutas/api/rutaService.ts
-// import {type  Ruta } from '../../../types';
-// import { type RutaFormData } from '../schemas/rutaSchema';
+// src/features/rutas/api/rutaService.ts
+import type { Ruta, CrearRutaDTO } from '../../../types';
 
-// // Datos iniciales de prueba (Mock)
-// let rutasMock: Ruta[] = [
-//   {
-//     idRuta: 'ruta-1',
-//     nombre: 'Rosario ↔ Eziza(Directo)',
-//     puntosRuta: [
-//       {
-//         idPunto: 'pto-1',
-//         direccion: 'Terminal de Ómnibus Mariano Moreno, Rosario',
-//         orden: 1,
-//       },
-//       {
-//         idPunto: 'pto-2',
-//         direccion: 'Aeropuerto Ezeiza',
-//         orden: 2,
-//       },
-//     ],
-//   },
-// ];
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-// export const rutaService = {
-//   obtenerTodas: async (): Promise<Ruta[]> => {
-//     return new Promise((resolve) => {
-//       setTimeout(() => resolve([...rutasMock]), 600);
-//     });
-//   },
+// 1. Definimos las interfaces para la creación y edición de rutas
+export interface PuntoRutaPayload {
+  idPunto: string;
+  orden: number;
+}
 
-//   crear: async (data: RutaFormData): Promise<Ruta> => {
-//     return new Promise((resolve) => {
-//       setTimeout(() => {
-//         const nuevaRuta: Ruta = {
-//           idRuta: crypto.randomUUID(),
-//           nombre: data.nombre,
-//           puntosRuta: data.puntosRuta.map((punto, index) => ({
-//             idPunto: crypto.randomUUID(),
-//             direccion: punto.direccion,
-//             // Nos aseguramos de que el orden sea secuencial según su posición en el array
-//             orden: index + 1,
-//           })),
-//         };
-//         rutasMock.push(nuevaRuta);
-//         resolve(nuevaRuta);
-//       }, 800);
-//     });
-//   },
+export interface CrearRutaPayload {
+  nombre: string;
+  puntos?: PuntoRutaPayload[];
+}
 
-  
+export type ActualizarRutaPayload = Partial<CrearRutaPayload>;
 
-//   eliminar: async (id: string): Promise<void> => {
-//     return new Promise((resolve) => {
-//       setTimeout(() => {
-//         rutasMock = rutasMock.filter((r) => r.idRuta !== id);
-//         resolve();
-//       }, 500);
-//     });
-//   },
-// };
-
-// frontend/src/features/rutas/api/rutaService.ts
-import { type Ruta } from '../../../types';
-import { type RutaFormData } from '../schemas/rutaSchema';
-
-// Datos iniciales de prueba (Mock)
-let rutasMock: Ruta[] = [
-  {
-    idRuta: 'ruta-1',
-    nombre: 'Rosario ↔ Ezeiza (Directo)',
-    puntosRuta: [
-      {
-        idPunto: 'pto-1',
-        direccion: 'Terminal de Ómnibus Mariano Moreno, Rosario',
-        orden: 1,
-      },
-      {
-        idPunto: 'pto-2',
-        direccion: 'Aeropuerto Ezeiza',
-        orden: 2,
-      },
-    ],
-  },
-];
+// Helper para adjuntar el token
+const getHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+};
 
 export const rutaService = {
-  obtenerTodas: async (): Promise<Ruta[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve([...rutasMock]), 600);
+  // GET /api/rutas
+  async obtenerTodas(): Promise<Ruta[]> {
+    const res = await fetch(`${API_URL}/rutas`, {
+      headers: getHeaders(),
     });
+    if (!res.ok) throw new Error('Error al obtener las rutas');
+    return res.json();
   },
 
-  crear: async (data: RutaFormData): Promise<Ruta> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const nuevaRuta: Ruta = {
-          idRuta: crypto.randomUUID(),
-          nombre: data.nombre,
-          puntosRuta: data.puntosRuta.map((punto, index) => ({
-            idPunto: crypto.randomUUID(),
-            direccion: punto.direccion,
-            orden: index + 1,
-          })),
-        };
-        rutasMock.push(nuevaRuta);
-        resolve(nuevaRuta);
-      }, 800);
+  // GET /api/rutas/:id
+  async obtenerPorId(id: string | number): Promise<Ruta> {
+    const res = await fetch(`${API_URL}/rutas/${id}`, {
+      headers: getHeaders(),
     });
+    if (!res.ok) throw new Error('Error al obtener la ruta');
+    return res.json();
   },
 
-  // ✅ Método de actualización añadido para soportar la edición
-  // Permitimos que idRuta sea string o number
-  actualizar: async (
-    idRuta: string | number,
-    data: RutaFormData,
-  ): Promise<Ruta> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Convertimos ambos a String para comparar sin importar si vienen numéricos o texto
-        const rutaExistente = rutasMock.find(
-          (r) => String(r.idRuta) === String(idRuta),
-        );
-
-        if (!rutaExistente) {
-          reject(new Error('Ruta no encontrada'));
-          return;
-        }
-
-        const puntosAnteriores = rutaExistente.puntosRuta ?? [];
-
-        const rutaActualizada: Ruta = {
-          ...rutaExistente,
-          nombre: data.nombre,
-          puntosRuta: data.puntosRuta.map((punto, i) => ({
-            idPunto: puntosAnteriores[i]?.idPunto ?? crypto.randomUUID(),
-            direccion: punto.direccion,
-            orden: i + 1,
-          })),
-        };
-
-        rutasMock = rutasMock.map((r) =>
-          String(r.idRuta) === String(idRuta) ? rutaActualizada : r,
-        );
-
-        resolve(rutaActualizada);
-      }, 800);
+  // POST /api/rutas
+  async crear(datos: CrearRutaDTO): Promise<Ruta> {
+    const res = await fetch(`${API_URL}/rutas`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(datos),
     });
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || 'Error al crear la ruta');
+    }
+    return res.json();
   },
 
-  eliminar: async (id: string | number): Promise<void> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        rutasMock = rutasMock.filter((r) => String(r.idRuta) !== String(id));
-        resolve();
-      }, 500);
+  // PATCH /api/rutas/:id
+  async actualizar(id: string | number, datos: ActualizarRutaPayload): Promise<Ruta> {
+    const res = await fetch(`${API_URL}/rutas/${id}`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify(datos),
     });
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || 'Error al actualizar la ruta');
+    }
+    return res.json();
+  },
+
+  // DELETE /api/rutas/:id
+  async eliminar(id: string | number): Promise<void> {
+    const res = await fetch(`${API_URL}/rutas/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error('Error al eliminar la ruta');
   },
 };
