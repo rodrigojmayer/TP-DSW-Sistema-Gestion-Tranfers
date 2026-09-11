@@ -1,4 +1,3 @@
-// src/features/rutas/components/RutaForm.tsx
 import { useEffect, useState } from 'react';
 import { useForm, useFieldArray, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';

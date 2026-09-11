@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import {
   UsersIcon,
   MapIcon,
+  MapPinIcon,
   PaperAirplaneIcon,
 } from '@heroicons/react/24/outline';
 
@@ -27,6 +28,10 @@ export const Sidebar = () => {
           <NavLink to="/usuarios" className={linkStyles}>
             <UsersIcon className="w-5 h-5" />
             Usuarios
+          </NavLink>
+          <NavLink to="/puntos" className={linkStyles}>
+            <MapPinIcon className="w-5 h-5" />
+            Puntos 
           </NavLink>
           <NavLink to="/rutas" className={linkStyles}>
             <MapIcon className="w-5 h-5" />

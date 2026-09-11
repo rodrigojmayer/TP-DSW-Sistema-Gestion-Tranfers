@@ -1,4 +1,3 @@
-// actualizado version zod v4
 import { z } from 'zod';
 
 export const rutaSchema = z.object({
