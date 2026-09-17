@@ -1,18 +1,21 @@
-import { type Punto } from '../../../types';
+import { type Punto, type PuntoBackend } from '../../../types';
 import { type PuntoFormData } from '../schemas/puntoSchema';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const puntoService = {
   obtenerTodos: async (): Promise<Punto[]> => {
-    const response = await fetch(`${API_URL}/puntos`);
+    const response = await fetch(`${API_URL}/punto`);
     if (!response.ok) {
       throw new Error('Error al obtener el catálogo de puntos');
     }
-    return response.json();
+    // return response.json();
+    const data = await response.json();
+    return data.map((p: PuntoBackend) => ({ ...p, idPunto: p.id }));
   },
   crear: async (datos: PuntoFormData): Promise<Punto> => {
-    const response = await fetch(API_URL, {
+    console.log("crear punto datos: ", datos)
+    const response = await fetch(`${API_URL}/punto`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(datos),
@@ -22,8 +25,10 @@ export const puntoService = {
   },
 
   actualizar: async (idPunto: string, datos: PuntoFormData): Promise<Punto> => {
-    const response = await fetch(`${API_URL}/${idPunto}`, {
-      method: 'PUT',
+    console.log("idPunto: ", idPunto)
+    console.log("datos: ", datos)
+    const response = await fetch(`${API_URL}/punto/${idPunto}`, {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(datos),
     });
@@ -32,7 +37,7 @@ export const puntoService = {
   },
 
   eliminar: async (idPunto: string): Promise<void> => {
-    const response = await fetch(`${API_URL}/${idPunto}`, {
+    const response = await fetch(`${API_URL}/punto/${idPunto}`, {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Error al eliminar punto');

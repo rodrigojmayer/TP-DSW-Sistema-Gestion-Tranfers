@@ -111,7 +111,8 @@ export const RutasPage = () => {
                 {rutas.map((ruta, idx) => {
                   // 1. Accedemos a la propiedad que devuelve Prisma (puntos) o fallback
                   const listaPuntos = ruta.puntos || ruta.puntosRuta || [];
-
+                  // console.log("ruta:", ruta)
+                  // console.log("listaPuntos:", listaPuntos)
                   // 2. Ordenamos por la columna 'orden'
                   const puntosOrdenados = [...listaPuntos].sort(
                     (a, b) => (a.orden ?? 0) - (b.orden ?? 0),

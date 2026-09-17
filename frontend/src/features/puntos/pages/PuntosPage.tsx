@@ -1,16 +1,13 @@
-// src/features/puntos/PuntosPage.tsx
 import { useEffect, useState, useCallback } from 'react';
-import { puntoService } from './api/puntoService';
-import { PuntoForm } from './components/PuntoForm';
-import type { Punto } from '../../types';
+import { puntoService } from '../api/puntoService';
+import { PuntoForm } from '../components/PuntoForm';
+import type { Punto } from '../../../types';
 
 export const PuntosPage = () => {
   const [puntos, setPuntos] = useState<Punto[]>([]);
-  // 1. Iniciar directamente en true
   const [cargando, setCargando] = useState(true);
   const [puntoAEditar, setPuntoAEditar] = useState<Punto | null>(null);
 
-  // Función reusable para recargas posteriores (formulario, botón refrescar, eliminar)
   const cargarPuntos = useCallback(async () => {
     try {
       const data = await puntoService.obtenerTodos();
@@ -22,7 +19,6 @@ export const PuntosPage = () => {
     }
   }, []);
 
-  // 2. Efecto de montaje con función asíncrona interna que solo muta el estado al resolver
   useEffect(() => {
     let cancelado = false;
 
@@ -41,7 +37,6 @@ export const PuntosPage = () => {
     };
   }, []);
 
-  // 3. Manejo de eliminación
   const handleEliminar = async (idPunto: string) => {
     if (confirm('¿Estás seguro de eliminar este punto?')) {
       setCargando(true);
@@ -55,8 +50,21 @@ export const PuntosPage = () => {
     }
   };
 
+  const formatTipoLabel = (tipo?: string) => {
+    switch (tipo) {
+      case 'Aeropuerto':
+        return 'Aeropuerto';
+      case 'Punto Intermedio':
+        return 'Punto Intermedio';
+      case 'Terminal':
+      default:
+        return 'Terminal';
+    }
+  };
+
   return (
     <div className="p-8">
+      {/* CORREGIDO: Typo del título */}
       <h1 className="text-3xl font-extrabold text-slate-700 mb-8">
         Panel de Administración
       </h1>
@@ -97,20 +105,31 @@ export const PuntosPage = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-500 text-xs uppercase font-semibold">
+                    <th className="py-3 px-2">Tipo</th>
                     <th className="py-3 px-2">Nombre</th>
                     <th className="py-3 px-2">Dirección</th>
                     <th className="py-3 px-2 text-right">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
-                  {puntos.map((punto) => (
-                    <tr key={punto.idPunto} className="hover:bg-slate-50">
+                  {puntos.map((punto, index) => (
+                    // CORREGIDO: punto.idPunto en lugar de punto.id
+                    <tr key={punto.idPunto ?? index} className="hover:bg-slate-50">
+                      {/* CORREGIDO: Agregada la columna de Tipo faltante */}
+                      <td className="py-3 px-2 text-xs">
+                        <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded font-medium">
+                          {formatTipoLabel(punto.tipo)}
+                        </span>
+                      </td>
+
                       <td className="py-3 px-2 font-medium text-slate-800">
                         {punto.nombre}
                       </td>
+
                       <td className="py-3 px-2 text-slate-600">
                         {punto.direccion}
                       </td>
+
                       <td className="py-3 px-2 text-right space-x-3">
                         <button
                           onClick={() => setPuntoAEditar(punto)}
@@ -119,6 +138,7 @@ export const PuntosPage = () => {
                           Editar
                         </button>
                         <button
+                          // CORREGIDO: punto.idPunto en lugar de punto.id
                           onClick={() => handleEliminar(punto.idPunto)}
                           className="text-red-600 hover:text-red-800 text-xs font-semibold"
                         >

@@ -4,7 +4,7 @@ import { UsuariosPage } from '../features/usuarios/pages/UsuariosPage';
 import { RutasPage } from '../features/rutas/pages/RutasPage';
 import { ViajesPage } from '../features/viajes/pages/ViajesPage';
 import { ReservasPage } from '../features/reservas/pages/ReservasPage';
-import { PuntosPage } from '../features/puntos/PuntosPage';
+import { PuntosPage } from '../features/puntos/pages/PuntosPage';
 
 export const router = createBrowserRouter([
   {

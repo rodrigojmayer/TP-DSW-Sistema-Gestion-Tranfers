@@ -52,12 +52,16 @@ export interface AgendaVehiculo {
 }
 
 // --- RUTAS (Para viajes compartidos) ---
-export interface PuntoRuta {
-  idPuntoRuta?: string;
+export interface PuntoRutaBackend {
+  id?: string;
   orden: number;
   idPunto?: string;
-  direccion?: string; // Para compatibilidad
-  punto?: Punto;       // Relación proveniente del backend
+  direccion?: string;
+  punto?: Punto;
+}
+export type PuntoRuta = Omit<PuntoRutaBackend, 'id'> & {
+  idPuntoRuta?: string;
+  id?: string;
 }
 
 export interface PuntoRutaInput {
@@ -65,26 +69,38 @@ export interface PuntoRutaInput {
   orden: number;
 }
 
-export interface CrearRutaDTO {
+export interface RutaBackend {
+  id: string;
   nombre: string;
-  puntos: PuntoRutaInput[];
+  puntosRuta?: PuntoRuta[]; 
+  puntos?: PuntoRuta[];    
+  origen: string; 
+  destino: string; 
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface Ruta {
-    idRuta: string;
-    nombre: string;
-    puntos?: PuntoRuta[];
-    puntosRuta?: PuntoRuta[];
-    createdAt: string;
-    updatedAt: string;  
+export type Ruta = Omit<RutaBackend, 'id'> & {
+  idRuta: string;
+};
+
+export interface PuntoBackend {
+  id: string;
+  nombre: string;
+  direccion: string;
+  tipo: TipoPunto; // o tu TipoPunto si lo tenés exportado
+  latitud: string;
+  longitud: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface Punto {
+export type Punto = Omit<PuntoBackend, 'id'> & {
     idPunto: string;
-    direccion: string;
-    nombre?: string;
-    createdAt: string;
-}
+    id?: string;
+};
+
+export type TipoPunto = 'Terminal' | 'Punto Intermedio' | 'Aeropuerto';
 
 export interface CrearRutaInput {
     nombre: string;

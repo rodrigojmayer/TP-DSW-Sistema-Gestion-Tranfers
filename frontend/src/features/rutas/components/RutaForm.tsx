@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { rutaSchema, type RutaFormData } from '../schemas/rutaSchema';
 import { rutaService } from '../api/rutaService';
 import { puntoService } from '../../puntos/api/puntoService';
-import type { Ruta, Punto } from '../../../types';
+import type { Ruta, Punto, PuntoRuta } from '../../../types';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 
@@ -64,15 +64,33 @@ export const RutaForm = ({
   // 4. Sincronización al editar o resetear formulario
   useEffect(() => {
     if (rutaAEditar) {
-      const listaPuntos = rutaAEditar.puntos || [];
+      console.log("rutaAEditar", rutaAEditar)
+      const puntosIniciales = rutaAEditar.puntos || rutaAEditar.puntosRuta || [];
+
+      const listaPuntos =
+      puntosIniciales.length > 0
+        ? puntosIniciales
+        : ([
+            ...(rutaAEditar.origen ? [{ punto: rutaAEditar.origen, orden: 1 }] : []),
+            ...(rutaAEditar.destino ? [{ punto: rutaAEditar.destino, orden: 2 }] : []),
+          ] as unknown as typeof puntosIniciales);
+      
       const ordenados = [...listaPuntos].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
 
+      const puntosFormateados = ordenados.map((p: PuntoRuta, index: number) => ({
+        idPunto: p.idPunto || p.punto?.idPunto || p.punto?.id || p.id || '',
+        orden: p.orden ?? index + 1,
+      }));
+
       reset({
-        nombre: rutaAEditar.nombre,
-        puntos: ordenados.map((p, index) => ({
-          idPunto: p.idPunto || p.punto?.idPunto || '',
-          orden: index + 1,
-        })),
+        nombre: rutaAEditar.nombre || '',
+        puntos:
+          puntosFormateados.length > 0
+            ? puntosFormateados
+            : [
+                { idPunto: '', orden: 1 },
+                { idPunto: '', orden: 2 },
+              ],
       });
     } else {
       reset({
@@ -95,6 +113,7 @@ export const RutaForm = ({
       })),
     };
 
+    console.log("datosConOrden ruta: ", datosConOrden)
     if (rutaAEditar) {
       await rutaService.actualizar(rutaAEditar.idRuta, datosConOrden);
     } else {

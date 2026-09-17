@@ -1,4 +1,4 @@
-import type { Ruta, CrearRutaDTO } from '../../../types';
+import type { Ruta, CrearRutaInput, RutaBackend } from '../../../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -25,27 +25,30 @@ const getHeaders = () => {
 };
 
 export const rutaService = {
-  // GET /api/rutas
+  // GET /api/ruta
   async obtenerTodas(): Promise<Ruta[]> {
-    const res = await fetch(`${API_URL}/rutas`, {
+    const res = await fetch(`${API_URL}/ruta`, {
       headers: getHeaders(),
     });
     if (!res.ok) throw new Error('Error al obtener las rutas');
-    return res.json();
+
+    // return response.json();
+    const data = await res.json();
+    return data.map((r: RutaBackend) => ({ ...r, idRuta: r.id }));
   },
 
-  // GET /api/rutas/:id
+  // GET /api/ruta/:id
   async obtenerPorId(id: string | number): Promise<Ruta> {
-    const res = await fetch(`${API_URL}/rutas/${id}`, {
+    const res = await fetch(`${API_URL}/ruta/${id}`, {
       headers: getHeaders(),
     });
     if (!res.ok) throw new Error('Error al obtener la ruta');
     return res.json();
   },
 
-  // POST /api/rutas
-  async crear(datos: CrearRutaDTO): Promise<Ruta> {
-    const res = await fetch(`${API_URL}/rutas`, {
+  // POST /api/ruta
+  async crear(datos: CrearRutaInput): Promise<Ruta> {
+    const res = await fetch(`${API_URL}/ruta`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(datos),
@@ -57,9 +60,9 @@ export const rutaService = {
     return res.json();
   },
 
-  // PATCH /api/rutas/:id
+  // PATCH /api/ruta/:id
   async actualizar(id: string | number, datos: ActualizarRutaPayload): Promise<Ruta> {
-    const res = await fetch(`${API_URL}/rutas/${id}`, {
+    const res = await fetch(`${API_URL}/ruta/${id}`, {
       method: 'PATCH',
       headers: getHeaders(),
       body: JSON.stringify(datos),
@@ -71,9 +74,9 @@ export const rutaService = {
     return res.json();
   },
 
-  // DELETE /api/rutas/:id
+  // DELETE /api/ruta/:id
   async eliminar(id: string | number): Promise<void> {
-    const res = await fetch(`${API_URL}/rutas/${id}`, {
+    const res = await fetch(`${API_URL}/ruta/${id}`, {
       method: 'DELETE',
       headers: getHeaders(),
     });
