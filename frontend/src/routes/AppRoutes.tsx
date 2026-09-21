@@ -5,25 +5,38 @@ import { RutasPage } from '../features/rutas/pages/RutasPage';
 import { ViajesPage } from '../features/viajes/pages/ViajesPage';
 import { ReservasPage } from '../features/reservas/pages/ReservasPage';
 import { PuntosPage } from '../features/puntos/pages/PuntosPage';
+import { LoginPage } from '../features/auth/pages/LoginPage';
+import { ProtectedRoute } from './ProtectedRoute';
 
 export const router = createBrowserRouter([
+  // 1. Ruta Pública: Login
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
+
+  // 2. Rutas Protegidas (Requieren autenticación)
   {
     path: '/',
-    element: <AdminLayout />, // El Layout envuelve a sus "children"
+    element: <ProtectedRoute />, // Evalúa si hay token/sesión activa
     children: [
-      // Redirección por defecto al entrar a la raíz "/"
-      { index: true, element: <Navigate to="/usuarios" replace /> },
-
-      { path: 'usuarios', element: <UsuariosPage /> },
-      { path: 'rutas', element: <RutasPage /> },
-      { path: 'puntos', element: <PuntosPage /> },
-      { path: 'viajes', element: <ViajesPage /> },
-      { path: 'reservas', element: <ReservasPage /> }, 
+      {
+        element: <AdminLayout />, // Layout de la app con Sidebar/Header
+        children: [
+          { index: true, element: <Navigate to="/usuarios" replace /> },
+          { path: 'usuarios', element: <UsuariosPage /> },
+          { path: 'rutas', element: <RutasPage /> },
+          { path: 'puntos', element: <PuntosPage /> },
+          { path: 'viajes', element: <ViajesPage /> },
+          { path: 'reservas', element: <ReservasPage /> },
+        ],
+      },
     ],
   },
-  // Catch-all para rutas que no existen (Error 404 manejado como redirección)
+
+  // 3. Redirección para rutas inexistentes
   {
     path: '*',
-    element: <Navigate to="/usuarios" replace />,
+    element: <Navigate to="/login" replace />,
   },
 ]);

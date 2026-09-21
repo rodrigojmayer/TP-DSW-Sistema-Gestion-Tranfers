@@ -72,13 +72,44 @@ export const UsuarioForm = ({
   }, [usuarioAEditar, reset]);
 
   const onSubmit = async (data: UsuarioFormData) => {
-    if (usuarioAEditar) {
-      await usuarioService.actualizar(usuarioAEditar.idUsuario, data);
-    } else {
-      await usuarioService.crear(data);
+    try {
+      // 1. Clonamos el objeto enviado por el formulario
+      const payload: Partial<UsuarioFormData> = { ...data };
+
+      // 2. Si la contraseña no se ingresó o está vacía, no la enviamos
+      if (!payload.password || payload.password === '') {
+        delete payload.password;
+      }
+
+      // 3. Limpiamos campos condicionales para evitar enviar cadenas vacías ("")
+      if (payload.rol !== 'CHOFER') {
+        delete payload.nroLicencia;
+        delete payload.vencimientoLicencia;
+      } else {
+        if (!payload.nroLicencia) delete payload.nroLicencia;
+        if (!payload.vencimientoLicencia) delete payload.vencimientoLicencia;
+      }
+
+      // 4. Petición según corresponda (Creación o Edición)
+      if (usuarioAEditar) {
+        const idValido = usuarioAEditar.idUsuario || usuarioAEditar.id;
+
+        if (!idValido) {
+          console.error('No se encontró un ID válido en el usuario:', usuarioAEditar);
+          return;
+        }
+
+        await usuarioService.actualizar(idValido, payload);
+      } else {
+        await usuarioService.crear(payload as UsuarioFormData);
+      }
+
+      reset();
+      onSuccess();
+    } catch (err: unknown) {
+      const e = err as Error;
+      alert(e.message || 'Error al guardar los datos del usuario');
     }
-    reset();
-    onSuccess();
   };
 
   return (

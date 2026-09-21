@@ -1,21 +1,24 @@
 export type RolUsuario = 'ADMIN' | 'CLIENTE' | 'OPERADOR' | 'CHOFER';
 
-
-export interface Usuario {
-  idUsuario: string;
+export interface UsuarioBackend {
+  id: string;
   usuario: string;
   nombre: string;
   apellido: string;
   email: string;
-  dni?: string; // <-- Propiedad agregada (opcional)
-  telefono?: string;
   rol: RolUsuario;
-  // Campos exclusivos para Choferes (opcionales)
-    nroLicencia?: string;
-    vencimientoLicencia?: string;
+  telefono?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-
+export type Usuario = Omit<UsuarioBackend, 'id'> & {
+  idUsuario: string;
+  id?: string; // Permite p.id sin romper la firma de MikroORM
+  dni?: string;
+  nroLicencia?: string;
+  vencimientoLicencia?: string;
+};
 
 export interface Pasajero {
   idPasajero: string;
