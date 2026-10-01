@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   UserCircleIcon,
   ArrowRightStartOnRectangleIcon,
@@ -19,11 +19,14 @@ export const Navbar = () => {
         Panel de Administración
       </h1>
 
+
+    <Link to="/perfil" style={{ textDecoration: 'none', color: 'inherit', fontWeight: 'bold' }}>
+       {/* {user ? `${user.nombre} ${user.apellido}` : 'Invitado'} */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 text-sm text-slate-600">
           <UserCircleIcon className="w-6 h-6 text-slate-400" />
             <span className="font-medium">
-              {user ? `${user.nombre} ${user.apellido}` : 'Usuario'}
+              {user ? `${user.nombre} ${user.apellido}` : 'Invitado'}
             </span>
         </div>
 
@@ -35,6 +38,10 @@ export const Navbar = () => {
           <ArrowRightStartOnRectangleIcon className="w-5 h-5" />
         </button>
       </div>
+    </Link>
+
+
+      
     </header>
   );
 };

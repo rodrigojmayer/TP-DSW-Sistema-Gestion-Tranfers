@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../api/authService';
 import { useAuthStore } from '../../../store/authStore';
@@ -10,7 +10,15 @@ export const LoginPage = () => {
   const [loading, setLoading] = useState(false);
 
   const loginStore = useAuthStore((state) => state.login);
+  const token = useAuthStore((state) => state.token); 
   const navigate = useNavigate();
+
+  // Redirigir automáticamente si el usuario ya está autenticado
+  useEffect(() => {
+    if (token) {
+      navigate('/', { replace: true });
+    }
+  }, [token, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,10 +27,14 @@ export const LoginPage = () => {
 
     try {
       const data = await authService.login({ identificador, password });
+      
+      // Guarda usuario y token en el estado global
       loginStore(data.usuario, data.token);
-      navigate('/');
+
+      // Redirige a la página principal
+      navigate('/', { replace: true });
     } catch (error: unknown) {
-        const err = error as Error
+      const err = error as Error;
       setError(err.message || 'Credenciales inválidas');
     } finally {
       setLoading(false);
@@ -79,6 +91,22 @@ export const LoginPage = () => {
           >
             {loading ? 'Iniciando sesión...' : 'Ingresar'}
           </button>
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => navigate('/signup')}
+              className="text-sm font-medium text-amber-600 hover:text-amber-700 hover:underline"
+            >
+              ¿No tienes cuenta? Regístrate aquí
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="text-sm font-medium text-amber-600 hover:text-amber-700 hover:underline"
+            >
+              O ingresa como invitado
+            </button>
+          </div>
         </form>
       </div>
     </div>
