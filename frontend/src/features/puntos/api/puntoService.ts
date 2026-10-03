@@ -1,7 +1,16 @@
 import { type Punto, type PuntoBackend } from '../../../types';
 import { type PuntoFormData } from '../schemas/puntoSchema';
+import { useAuthStore } from '../../../store/authStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+const getAuthHeaders = () => {
+  const token = useAuthStore.getState().token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+};
 
 export const puntoService = {
   obtenerTodos: async (): Promise<Punto[]> => {
@@ -17,7 +26,7 @@ export const puntoService = {
     console.log("crear punto datos: ", datos)
     const response = await fetch(`${API_URL}/punto`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(datos),
     });
     if (!response.ok) throw new Error('Error al crear punto');
@@ -29,7 +38,7 @@ export const puntoService = {
     console.log("datos: ", datos)
     const response = await fetch(`${API_URL}/punto/${idPunto}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(datos),
     });
     if (!response.ok) throw new Error('Error al actualizar punto');
@@ -39,6 +48,7 @@ export const puntoService = {
   eliminar: async (idPunto: string): Promise<void> => {
     const response = await fetch(`${API_URL}/punto/${idPunto}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Error al eliminar punto');
   },

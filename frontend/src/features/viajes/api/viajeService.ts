@@ -1,175 +1,173 @@
-// // frontend/src/features/viajes/api/viajeService.ts
-// import type { Viaje } from '../../../types';
-// import type { ViajeFormData } from '../schemas/viajeSchema';
+import type { Viaje, ViajeBackend } from '../../../types';
+import type { ViajeFormData } from '../schemas/viajeSchema';
 
-// // Mock de Viajes iniciales
-// let viajesMock: Viaje[] = [
-//   {
-//     idViaje: 'viaje-1',
-//     idRuta: 'ruta-1',
-//     idChofer: 'chofer-1',
-//     fechaHoraSalida: '2026-06-15T08:00',
-//     precio: 4500,
-//     estado: 'PROGRAMADO',
-//   },
-// ];
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-// export const viajeService = {
-//   obtenerTodos: async (): Promise<Viaje[]> => {
-//     return new Promise((resolve) => {
-//       setTimeout(() => resolve([...viajesMock]), 500);
-//     });
-//   },
+// Helper para obtener el token desde localStorage
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+};
 
-//   crear: async (data: ViajeFormData): Promise<Viaje> => {
-//     return new Promise((resolve) => {
-//       setTimeout(() => {
-//         const nuevoViaje: Viaje = {
-//           idViaje: crypto.randomUUID(),
-//           idRuta: data.idRuta,
-//           idChofer: data.idChofer,
-//           fechaHoraSalida: data.fechaHoraSalida,
-//           precio: data.precio,
-//           estado: 'PROGRAMADO',
-//         };
-//         viajesMock.push(nuevoViaje);
-//         resolve(nuevoViaje);
-//       }, 700);
-//     });
-//   },
+const mapBackendToFrontend = (raw: ViajeBackend): Viaje => {
+  let idRuta = '';
+  let rutaNombre = '';
 
-//   eliminar: async (id: string): Promise<void> => {
-//     return new Promise((resolve) => {
-//       setTimeout(() => {
-//         viajesMock = viajesMock.filter((v) => v.idViaje !== id);
-//         resolve();
-//       }, 400);
-//     });
-//   },
-// };
-
-// // simulacion del backend
-// import type { Viaje } from '../../../types';
-
-// const STORAGE_KEY = 'transfers_app_viajes';
-
-// const obtenerViajesIniciales = (): Viaje[] => {
-//   const guardadas = localStorage.getItem(STORAGE_KEY);
-//   if (guardadas) {
-//     try {
-//       return JSON.parse(guardadas);
-//     } catch {
-//       // Ignorar error de parseo
-//     }
-//   }
-
-//   // Datos mock alineados estrictamente al tipo Viaje
-//   const iniciales: Viaje[] = [
-//     {
-//       idViaje: 'viaje-1',
-//       idRuta: 'ruta-san-lorenzo-rosario',
-//       idChofer: 'chofer-1', // Usando el chofer que creamos antes
-//       fechaHoraSalida: new Date(Date.now() + 86400000).toISOString(),
-//       precio: 8500,
-//       estado: 'PROGRAMADO',
-//     },
-//     {
-//       idViaje: 'viaje-2',
-//       idRuta: 'ruta-funes-aeropuerto',
-//       idChofer: 'chofer-2',
-//       fechaHoraSalida: new Date(Date.now() + 172800000).toISOString(),
-//       precio: 6000,
-//       estado: 'PROGRAMADO',
-//     },
-//   ];
-//   localStorage.setItem(STORAGE_KEY, JSON.stringify(iniciales));
-//   return iniciales;
-// };
-
-// export const viajeService = {
-//   obtenerTodos: async (): Promise<Viaje[]> => {
-//     await new Promise((resolve) => setTimeout(resolve, 200));
-//     return obtenerViajesIniciales();
-//   },
-
-//   obtenerPorId: async (idViaje: string): Promise<Viaje> => {
-//     await new Promise((resolve) => setTimeout(resolve, 150));
-//     const viajes = obtenerViajesIniciales();
-//     const viaje = viajes.find((v) => v.idViaje === idViaje);
-//     if (!viaje) throw new Error('Viaje no encontrado');
-//     return viaje;
-//   },
-// };
-
-// implementaciones de crear y eliminar
-import type { Viaje } from '../../../types';
-import type { ViajeFormData } from '../schemas/viajeSchema'; // Ajusta la ruta si es distinta
-
-const STORAGE_KEY = 'transfers_app_viajes';
-
-const obtenerViajesIniciales = (): Viaje[] => {
-  const guardadas = localStorage.getItem(STORAGE_KEY);
-  if (guardadas) {
-    try {
-      return JSON.parse(guardadas);
-    } catch {
-      // Ignorar error de parseo
-    }
+  if (raw.ruta && typeof raw.ruta === 'object') {
+    idRuta = raw.ruta.id;
+    rutaNombre = raw.ruta.nombre;
+  } else if (typeof raw.ruta === 'string') {
+    idRuta = raw.ruta;
   }
 
-  // Datos mock alineados estrictamente a tu tipo Viaje
-  const iniciales: Viaje[] = [
-    {
-      idViaje: 'viaje-1',
-      idRuta: 'ruta-1', // Asegúrate de tener una ruta con este ID en tu rutaService
-      idChofer: 'chofer-1', // Asegúrate de tener un chofer con este ID en tu usuarioService
-      fechaHoraSalida: new Date(Date.now() + 86400000).toISOString(),
-      precio: 8500,
-      estado: 'PROGRAMADO',
-    },
-  ];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(iniciales));
-  return iniciales;
+  let idChofer = '';
+  if (raw.chofer && typeof raw.chofer === 'object') {
+    idChofer = raw.chofer.id;
+  } else if (typeof raw.chofer === 'string') {
+    idChofer = raw.chofer;
+  } else if (raw.idChofer) {
+    idChofer = raw.idChofer;
+  }
+  
+  return {
+    id: raw.id,
+    idRuta: idRuta,
+    idChofer: idChofer, 
+    fechaHoraSalida: raw.fechaHoraInicio,
+    fechaHoraLlegada: raw.fechaHoraFin || '',
+    precio: raw.precioBase,
+    estado: 'PROGRAMADO',
+    capacidadPasajeros: raw.capacidadPasajeros,
+    capacidadValijas: raw.capacidadValijas,
+    rutaNombre: rutaNombre,
+  };
 };
 
 export const viajeService = {
-  obtenerTodos: async (): Promise<Viaje[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 200)); // Simulamos latencia de red
-    return obtenerViajesIniciales();
+  // 1. PÚBLICO: Obtiene solo los viajes de tipo COMPARTIDO (Para la home o invitados)
+  obtenerPublicos: async (): Promise<Viaje[]> => {
+    const res = await fetch(`${API_URL}/viaje/compartidos`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!res.ok) {
+      throw new Error('Error al obtener la lista de viajes públicos');
+    }
+
+    const data: ViajeBackend[] = await res.json();
+    return data.map(mapBackendToFrontend);
   },
 
-  obtenerPorId: async (idViaje: string): Promise<Viaje> => {
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    const viajes = obtenerViajesIniciales();
-    const viaje = viajes.find((v) => v.idViaje === idViaje);
-    if (!viaje) throw new Error('Viaje no encontrado');
-    return viaje;
+  // 2. CLIENTE LOGUEADO: Viajes compartidos + sus viajes reservados
+  obtenerMisViajes: async (): Promise<Viaje[]> => {
+    const res = await fetch(`${API_URL}/viaje/mis-viajes`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!res.ok) {
+      throw new Error('Error al obtener tus viajes');
+    }
+
+    const data: ViajeBackend[] = await res.json();
+    return data.map(mapBackendToFrontend);
   },
 
-  // Agregamos la función CREAR que usas en el formulario
+  // 3. ADMIN: Obtiene la totalidad de los viajes almacenados en la base de datos
+  obtenerTodosAdmin: async (): Promise<Viaje[]> => {
+    const res = await fetch(`${API_URL}/viaje/admin/todos`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!res.ok) {
+      throw new Error('Error al obtener la totalidad de viajes');
+    }
+
+    const data: ViajeBackend[] = await res.json();
+    return data.map(mapBackendToFrontend);
+  },
+
+  obtenerPorId: async (id: string): Promise<Viaje> => {
+    const res = await fetch(`${API_URL}/viaje/${id}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!res.ok) {
+      throw new Error('Viaje no encontrado');
+    }
+
+    const data: ViajeBackend = await res.json();
+    return mapBackendToFrontend(data);
+  },
+
   crear: async (datos: ViajeFormData): Promise<Viaje> => {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const viajes = obtenerViajesIniciales();
-
-    const nuevoViaje: Viaje = {
-      idViaje: `viaje-${Date.now()}`, // Generamos un ID único simple
+    const payload = {
+      tipo: 'COMPARTIDO',
+      fechaHoraInicio: new Date(datos.fechaHoraSalida).toISOString(),
+      fechaHoraFin: new Date(datos.fechaHoraLlegada).toISOString(),
+      capacidadPasajeros: datos.capacidadPasajeros,
+      capacidadValijas: datos.capacidadValijas,
+      precioBase: Number(datos.precio),
       idRuta: datos.idRuta,
-      idChofer: datos.idChofer,
-      fechaHoraSalida: datos.fechaHoraSalida,
-      precio: datos.precio,
-      estado: 'PROGRAMADO',
+      idChofer: datos.idChofer || null,
     };
 
-    const nuevosViajes = [...viajes, nuevoViaje];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nuevosViajes));
-    return nuevoViaje;
+    const res = await fetch(`${API_URL}/viaje`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => null);
+      throw new Error(errData?.message || 'Error al crear el viaje');
+    }
+
+    const nuevoViajeBackend: ViajeBackend = await res.json();
+    return mapBackendToFrontend(nuevoViajeBackend);
   },
 
-  // Agregamos la función ELIMINAR (Cancelar) que usas en el botón
-  eliminar: async (idViaje: string): Promise<void> => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    const viajes = obtenerViajesIniciales();
-    const viajesFiltrados = viajes.filter((v) => v.idViaje !== idViaje);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(viajesFiltrados));
+  actualizar: async (id: string, datos: ViajeFormData): Promise<Viaje> => {
+    const payload = {
+      tipo: 'COMPARTIDO',
+      fechaHoraInicio: new Date(datos.fechaHoraSalida).toISOString(),
+      fechaHoraFin: new Date(datos.fechaHoraLlegada).toISOString(),
+      capacidadPasajeros: datos.capacidadPasajeros,
+      capacidadValijas: datos.capacidadValijas,
+      precioBase: Number(datos.precio),
+      idRuta: datos.idRuta,
+      idChofer: datos.idChofer || null,
+    };
+
+    const res = await fetch(`${API_URL}/viaje/${id}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => null);
+      throw new Error(errData?.message || 'Error al actualizar el viaje');
+    }
+
+    const viajeBackend: ViajeBackend = await res.json();
+    return mapBackendToFrontend(viajeBackend);
+  },
+
+  eliminar: async (id: string): Promise<void> => {
+    const res = await fetch(`${API_URL}/viaje/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+
+    if (!res.ok) {
+      throw new Error('Error al eliminar el viaje');
+    }
   },
 };

@@ -1,27 +1,22 @@
-// import { z } from 'zod';
-
-// export const reservaSchema = z.object({
-//   idViaje: z.string().min(1, 'Debe seleccionar un viaje programado'),
-//   idPasajero: z.string().min(1, 'Debe seleccionar un pasajero'),
-//   asiento: z.coerce
-//     .number()
-//     .min(1, 'El número de asiento debe ser al menos 1')
-//     .max(60, 'El asiento máximo permitido es 60'),
-//   precioFinal: z.coerce.number().min(0.01, 'El precio debe ser mayor a 0'),
-// });
-
-// export type ReservaFormData = z.infer<typeof reservaSchema>;
-
-// reforma con ususario logueado y sin loguear
 import { z } from 'zod';
 
 // Campos compartidos obligatorios para cualquier tipo de reserva
 const reservaBase = {
+  tipoViaje: z.enum(['COMPARTIDO', 'PRIVADO'] as const, {
+    message: 'Debe seleccionar un tipo de viaje válido',
+  }),
   idViaje: z.string().min(1, 'Debe seleccionar un viaje programado'),
+  origen: z.string().min(1, 'Debe ingresar o seleccionar un origen'),
+  destino: z.string().min(1, 'Debe ingresar o seleccionar un destino'),
   asiento: z.coerce
     .number()
-    .min(1, 'El asiento debe ser al menos 1')
-    .max(60, 'El asiento máximo es 60'),
+    .min(1, 'La cantidad de asientos debe ser al menos 1')
+    .max(60, 'El máximo de asientos permitido es 60'),
+  cantValijas: z.coerce
+    .number({ message: 'Debe ingresar un número válido' })
+    .min(0, 'Las valijas no pueden ser un valor negativo')
+    .max(60, 'El máximo de valijas por reserva es 60')
+    .default(0),
   precioFinal: z.coerce.number().min(0.01, 'El precio debe ser mayor a 0'),
 };
 
@@ -29,21 +24,23 @@ const reservaBase = {
 const reservaLogueadoSchema = z.object({
   ...reservaBase,
   tipoReserva: z.literal('LOGUEADO'),
-  idCliente: z.string().min(1, 'Debe seleccionar un cliente registrado'),
-  // En este modo, pedimos los datos básicos del pasajero que viajará
+  idCliente: z
+    .string()
+    .min(1, 'Debe seleccionar un cliente registrado')
+    .optional()
+    .or(z.literal('')),
   pasajeroNombre: z.string().min(2, 'Nombre del pasajero es requerido'),
   pasajeroApellido: z.string().min(2, 'Apellido del pasajero es requerido'),
   pasajeroDni: z.string().min(6, 'DNI / Documento requerido'),
-  pasajeroEmail: z.string().optional(),
-  pasajeroTelefono: z.string().optional(),
+  pasajeroEmail: z.string().optional().or(z.literal('')),
+  pasajeroTelefono: z.string().optional().or(z.literal('')),
 });
 
-// 2. Esquema cuando el comprador es un Invitado (Reserva Express)
+// 2. Esquema cuando la reserva es de un Invitado (Express)
 const reservaInvitadoSchema = z.object({
   ...reservaBase,
   tipoReserva: z.literal('INVITADO'),
-  idCliente: z.string().optional(),
-  // Al no estar registrado, Email y Teléfono se vuelven 100% OBLIGATORIOS
+  idCliente: z.string().optional().or(z.literal('')),
   pasajeroNombre: z.string().min(2, 'El nombre es obligatorio'),
   pasajeroApellido: z.string().min(2, 'El apellido es obligatorio'),
   pasajeroDni: z.string().min(6, 'El DNI / Documento es obligatorio'),
@@ -58,5 +55,8 @@ export const reservaSchema = z.discriminatedUnion('tipoReserva', [
   reservaLogueadoSchema,
   reservaInvitadoSchema,
 ]);
+
+// Alias de exportación para resolver la importación en ReservasPage.tsx
+export const crearReservaSchema = reservaSchema;
 
 export type ReservaFormData = z.infer<typeof reservaSchema>;
