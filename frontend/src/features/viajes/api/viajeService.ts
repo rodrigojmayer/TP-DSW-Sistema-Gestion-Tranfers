@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Viaje, ViajeBackend } from '../../../types';
 import type { ViajeFormData } from '../schemas/viajeSchema';
 
@@ -34,10 +35,11 @@ const mapBackendToFrontend = (raw: ViajeBackend): Viaje => {
   
   return {
     id: raw.id,
+    tipo: raw.tipo || (raw as any).tipoViaje || 'COMPARTIDO',
     idRuta: idRuta,
     idChofer: idChofer, 
-    fechaHoraSalida: raw.fechaHoraInicio,
-    fechaHoraLlegada: raw.fechaHoraFin || '',
+    fechaHoraInicio: raw.fechaHoraInicio,
+    fechaHoraFin: raw.fechaHoraFin || '',
     precio: raw.precioBase,
     estado: 'PROGRAMADO',
     capacidadPasajeros: raw.capacidadPasajeros,
@@ -109,8 +111,8 @@ export const viajeService = {
   crear: async (datos: ViajeFormData): Promise<Viaje> => {
     const payload = {
       tipo: 'COMPARTIDO',
-      fechaHoraInicio: new Date(datos.fechaHoraSalida).toISOString(),
-      fechaHoraFin: new Date(datos.fechaHoraLlegada).toISOString(),
+      fechaHoraInicio: new Date(datos.fechaHoraInicio).toISOString(),
+      fechaHoraFin: new Date(datos.fechaHoraFin).toISOString(),
       capacidadPasajeros: datos.capacidadPasajeros,
       capacidadValijas: datos.capacidadValijas,
       precioBase: Number(datos.precio),
@@ -136,8 +138,8 @@ export const viajeService = {
   actualizar: async (id: string, datos: ViajeFormData): Promise<Viaje> => {
     const payload = {
       tipo: 'COMPARTIDO',
-      fechaHoraInicio: new Date(datos.fechaHoraSalida).toISOString(),
-      fechaHoraFin: new Date(datos.fechaHoraLlegada).toISOString(),
+      fechaHoraInicio: new Date(datos.fechaHoraInicio).toISOString(),
+      fechaHoraFin: new Date(datos.fechaHoraFin).toISOString(),
       capacidadPasajeros: datos.capacidadPasajeros,
       capacidadValijas: datos.capacidadValijas,
       precioBase: Number(datos.precio),

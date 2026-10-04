@@ -6,12 +6,21 @@ import { reservaService } from '../api/reservaService';
 import { viajeService } from '../../viajes/api/viajeService';
 import { usuarioService } from '../../usuarios/api/usuarioService';
 import { useAuthStore } from '../../../store/authStore';
-import type { Reserva, Viaje, Usuario, Ruta } from '../../../types';
+import type { Reserva, Viaje, Usuario, Ruta, CrearReservaPrivadaFormData } from '../../../types';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { rutaService } from '../../rutas/api/rutaService';
 import { InputAutocompleteGeo } from '../../../components/ui/InputAutocompleteGeo';
 import { calcularDistanciaHaversine, type Coordenada } from '../../../services/geoService';
+
+const formatToDatetimeLocal = (dateStr?: string | Date) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n: number) => (n < 10 ? `0${n}` : n);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 
 export const ReservasPage = () => {
   const user = useAuthStore((state) => state.user);
@@ -66,11 +75,19 @@ export const ReservasPage = () => {
   const [coordsOrigen, setCoordsOrigen] = useState<Coordenada | null>(null);
   const [coordsDestino, setCoordsDestino] = useState<Coordenada | null>(null);
   // const [distanciaKm, setDistanciaKm] = useState<number | null>(null);
+  const [fechaInicioPrivada, setFechaInicioPrivada] = useState<string>('');
+  // const [fechaFinPrivada, setFechaFinPrivada] = useState<string>('');
 
   // 1. Obtener el objeto completo del viaje seleccionado
   const viajeSeleccionado = useMemo(() => {
     return viajes.find((v) => v.id === idViajeSeleccionado);
   }, [viajes, idViajeSeleccionado]);
+
+  const viajesCompartidosDisponibles = useMemo(() => {
+    if (!viajes || !Array.isArray(viajes)) return [];
+    
+    return viajes.filter((viaje) => viaje.tipo === 'COMPARTIDO');
+  }, [viajes]);
 
   // 2. Extraer y normalizar todas las paradas en un arreglo de strings
   const listaParadas = useMemo(() => {
@@ -142,15 +159,6 @@ export const ReservasPage = () => {
     return null;
   }, [tipoViaje, coordsOrigen, coordsDestino]);
 
-//   useEffect(() => {
-//   if (idViajeSeleccionado) {
-//     reservaService.obtenerPorViaje(idViajeSeleccionado) // Endpoint backend para traer reservas de un viaje
-//       .then((data) => setTodasLasReservasViaje(data))
-//       .catch(() => setTodasLasReservasViaje([]));
-//   } else {
-//     setTodasLasReservasViaje([]);
-//   }
-// }, [idViajeSeleccionado]);
   useEffect(() => {
     let cancelado = false;
 
@@ -179,13 +187,6 @@ export const ReservasPage = () => {
     setValue('origen', '');
     setValue('destino', '');
   }, [idViajeSeleccionado, tipoViaje, setValue]);
-
-  // useEffect(() => {
-  //   if (viajeSeleccionado) {
-  //     const precioUnitario = viajeSeleccionado.precio || 0;
-  //     setValue('precioFinal', precioUnitario * asientoIngresado);
-  //   }
-  // }, [viajeSeleccionado, asientoIngresado, setValue]);
 
   useEffect(() => {
 
@@ -449,6 +450,50 @@ export const ReservasPage = () => {
     }
   }, [limiteValijas, valijasIngresadas, setValue]);
 
+  // Calculamos la fecha activa directamente en el render
+  const fechaInicio = useMemo(() => {
+    if (tipoViaje === 'COMPARTIDO') {
+      const inicio = viajeSeleccionado?.fechaHoraInicio || viajeSeleccionado?.fechaHora;
+      return formatToDatetimeLocal(inicio);
+    }
+    return fechaInicioPrivada;
+  }, [tipoViaje, viajeSeleccionado, fechaInicioPrivada]);
+
+  const sumarHorasADatetimeLocal = (datetimeStr: string, horasASumar: number): string => {
+  if (!datetimeStr || isNaN(horasASumar) || horasASumar <= 0) return '';
+  const fecha = new Date(datetimeStr);
+  if (isNaN(fecha.getTime())) return '';
+
+  const fechaFin = new Date(fecha.getTime() + horasASumar * 60 * 60 * 1000);
+
+  const pad = (n: number) => (n < 10 ? `0${n}` : n);
+  return `${fechaFin.getFullYear()}-${pad(fechaFin.getMonth() + 1)}-${pad(fechaFin.getDate())}T${pad(fechaFin.getHours())}:${pad(fechaFin.getMinutes())}`;
+};
+
+// 1. Cálculo exclusivo para VIAJE PRIVADO
+const fechaFinPrivadaCalculada = useMemo(() => {
+  // Si no hay fecha de inicio o distancia guardada, no calcula nada
+  if (!fechaInicioPrivada || !distanciaKm || distanciaKm <= 0) return '';
+  
+  const horasEstimadas = distanciaKm / 100;
+  return sumarHorasADatetimeLocal(fechaInicioPrivada, horasEstimadas);
+}, [fechaInicioPrivada, distanciaKm]);
+
+// 2. Selección de fecha de fin según el tipo de viaje
+const fechaFin = useMemo(() => {
+  if (tipoViaje === 'COMPARTIDO') {
+    // Para viaje COMPARTIDO: Lee directamente la fecha fin propia del Viaje
+    return formatToDatetimeLocal(viajeSeleccionado?.fechaHoraFin);
+  }
+  
+  // Para viaje PRIVADO: Usa el valor calculado a partir de la distancia y velocidad
+  return fechaFinPrivadaCalculada;
+}, [tipoViaje, viajeSeleccionado, fechaFinPrivadaCalculada]);
+
+
+
+
+
   useEffect(() => {
     let isMounted = true;
 
@@ -465,8 +510,6 @@ export const ReservasPage = () => {
 
         const rutasData = await rutaService.obtenerTodas().catch(() => []);
         setRutas(rutasData);
-
-        console.log('Estructura del objeto Viaje:', viajesData[0]);
 
         let usuariosData: Usuario[] = [];
         if (user?.rol === 'ADMIN') {
@@ -651,6 +694,54 @@ export const ReservasPage = () => {
       const cantPasajerosSolicitados = Number(data.asiento) || 1;
       const cantValijasSolicitadas = Number(data.cantValijas) || 0;
       
+
+
+      // 1. SI EL VIAJE ES PRIVADO
+      if (tipoViaje === 'PRIVADO') {
+        if (!data.origen || !data.destino) {
+          alert('Por favor ingrese el origen y destino exactos para el viaje privado.');
+          return;
+        }
+
+        const payloadPrivado: CrearReservaPrivadaFormData = {
+          pasajeroNombre: data.pasajeroNombre,
+          pasajeroApellido: data.pasajeroApellido,
+          pasajeroDni: data.pasajeroDni,
+          // 💡 Si data.pasajeroEmail viene como undefined, usará ''
+          pasajeroEmail: data.pasajeroEmail || '', 
+          pasajeroTelefono: data.pasajeroTelefono || '',
+          origen: {
+            nombre: data.origen,
+            latitud: coordsOrigen?.lat || -34.5889,
+            longitud: coordsOrigen?.lng || -58.3758,
+            direccion: data.origen,
+          },
+          destino: {
+            nombre: data.destino,
+            latitud: coordsDestino?.lat || -34.8222,
+            longitud: coordsDestino?.lng || -58.5358,
+            direccion: data.destino,
+          },
+          fechaHoraInicio: new Date().toISOString(),
+          cantPasajeros: cantPasajerosSolicitados,
+          cantValijas: cantValijasSolicitadas,
+          precio: Number(data.precioFinal),
+          distanciaKm: distanciaKm || undefined,
+        };
+
+        if (modoEdicion && idEdicion) {
+          await reservaService.actualizar(idEdicion, data);
+        } else {
+          await reservaService.crearPrivada(payloadPrivado);
+        }
+
+        handleCancelarEdicion();
+        await refrescarDatos();
+        return;
+      }
+
+
+
       // Validar el límite calculado para el tramo
       if (cantPasajerosSolicitados > maxAsientosDisponibles) {
         alert(
@@ -776,19 +867,16 @@ export const ReservasPage = () => {
                 className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none"
               >
                 <option value="">Seleccione un viaje...</option>
-                {viajes.map((v) => {
+                {viajesCompartidosDisponibles.map((v) => {
                   const nombreEtiqueta =
                     v.rutaNombre ||
                     (v.origen && v.destino
                       ? `${v.origen} ➔ ${v.destino}`
                       : `Viaje #${v.id.slice(0, 5)}`);
 
-                  const fechaSalida = v.fechaHoraSalida || v.fechaHora;
-
                   return (
                     <option key={v.id} value={v.id}>
                       {nombreEtiqueta}{' '}
-                      {fechaSalida ? `(${new Date(fechaSalida).toLocaleString()})` : ''}
                     </option>
                   );
                 })}
@@ -804,27 +892,6 @@ export const ReservasPage = () => {
           {/* ORIGEN Y DESTINO DINÁMICOS */}
           {tipoViaje === 'PRIVADO' ? (
             <div className="grid grid-cols-1 gap-3">
-              {/* <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-slate-700">Dirección Exacta de Origen</label>
-                <input 
-                  type="text" 
-                  placeholder="Ej: Av. San Martín 1234, Piso 2" 
-                  {...register('origen')} 
-                  className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none"
-                />
-                {errors.origen && <span className="text-xs text-red-500">{errors.origen.message}</span>}
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-slate-700">Dirección Exacta de Destino</label>
-                <input 
-                  type="text" 
-                  placeholder="Ej: Aeropuerto Ezeiza, Terminal A" 
-                  {...register('destino')} 
-                  className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none"
-                />
-                {errors.destino && <span className="text-xs text-red-500">{errors.destino.message}</span>}
-              </div> */}
               <InputAutocompleteGeo
                 label="Origen Exacto / Localidad"
                 placeholder="Ej: Rosario, Santa Fe"
@@ -849,6 +916,8 @@ export const ReservasPage = () => {
                   <span className="text-sm font-bold text-amber-900">{distanciaKm} km</span>
                 </div>
               )}
+
+           
             </div>
           ) : (
             /* VISTA PARA VIAJE COMPARTIDO */
@@ -914,10 +983,38 @@ export const ReservasPage = () => {
                     {errors.idCliente.message}
                   </span>
                 )}
+   
               </div>
             </div>
           )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  {/* Fecha Inicio */}
+  <div className="flex flex-col gap-1">
+    <label className="text-sm font-medium text-slate-700">
+      Fecha y Hora de Inicio
+    </label>
+    <input
+      type="datetime-local"
+      value={fechaInicio}
+      disabled={tipoViaje === 'COMPARTIDO'}
+      onChange={(e) => setFechaInicioPrivada(e.target.value)}
+      className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none disabled:bg-slate-100 disabled:text-slate-500"
+    />
+  </div>
 
+  {/* Fecha Fin */}
+  <div className="flex flex-col gap-1">
+    <label className="text-sm font-medium text-slate-700">
+      Fecha y Hora de Fin {tipoViaje === 'PRIVADO' && '(Estimada)'}
+    </label>
+    <input
+      type="datetime-local"
+      value={fechaFin}
+      disabled={true} // Siempre deshabilitado
+      className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-slate-100 text-slate-600 outline-none cursor-not-allowed"
+    />
+  </div>
+</div>
           {/* DATOS DEL PASAJERO */}
           <div className="space-y-3 border-t pt-3">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">

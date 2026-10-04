@@ -3,10 +3,10 @@ import { z } from 'zod';
 export const viajeSchema = z.object({
   idRuta: z.string().min(1, { message: 'Debe seleccionar una ruta' }),
   idChofer: z.string().optional(),
-  fechaHoraSalida: z
+  fechaHoraInicio: z
     .string()
     .min(1, { message: 'La fecha y hora de salida son obligatorias' }),
-  fechaHoraLlegada: z
+  fechaHoraFin: z
     .string()
     .min(1, { message: 'La fecha y hora de llegada son obligatorias' }),
   capacidadPasajeros: z.coerce

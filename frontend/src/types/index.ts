@@ -156,12 +156,19 @@ export interface Parada {
   nombre: string;
 }
 
+export interface PuntoGeografico {
+  nombre?: string;
+  direccion?: string;
+  latitud?: number;
+  longitud?: number;
+}
+
 export interface Viaje {
   id: string;
   idRuta?: string;
   idChofer?: string;
-  fechaHoraSalida: string;
-  fechaHoraLlegada?: string;
+  fechaHoraInicio: string;
+  fechaHoraFin?: string;
   precio: number;
   estado?: 'PROGRAMADO' | 'EN_CURSO' | 'FINALIZADO' | 'CANCELADO';
   capacidadPasajeros?: number;
@@ -169,8 +176,9 @@ export interface Viaje {
   rutaNombre?: string;
   // estado: string;
   tipo?: 'COMPARTIDO' | 'PRIVADO';
-  origen?: string;
-  destino?: string;
+  // tipo?: string;
+  origen?: string | PuntoGeografico;
+  destino?: string | PuntoGeografico; 
   fechaHora?: string; 
   punto_ruta?: PuntoRuta[];
   chofer?: {
@@ -262,4 +270,28 @@ export interface OcupacionReserva {
   destino: string;
   cantPasajeros: number;
   cantValijas: number;
+}
+
+export interface PuntoInput {
+  nombre: string;
+  latitud: number;
+  longitud: number;
+  direccion?: string;
+}
+
+export interface CrearReservaPrivadaFormData {
+  pasajeroNombre: string;
+  pasajeroApellido: string;
+  pasajeroDni: string;
+  pasajeroEmail: string;
+  pasajeroTelefono?: string;
+  origen: PuntoInput;
+  destino: PuntoInput;
+  fechaHoraInicio: string; // ISO String
+  fechaHoraFin?: string;
+  cantPasajeros: number;
+  cantValijas?: number;
+  precio: number;
+  distanciaKm?: number;
+  duracionMinutos?: number;
 }

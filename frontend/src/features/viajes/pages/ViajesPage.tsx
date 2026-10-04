@@ -7,7 +7,7 @@ import { rutaService } from '../../rutas/api/rutaService';
 import { usuarioService } from '../../usuarios/api/usuarioService';
 // import { puntoService } from '../../puntos/api/puntoService';
 import { useAuthStore } from '../../../store/authStore';
-import type { Viaje, Ruta, Usuario, Punto, Reserva, OcupacionReserva} from '../../../types';
+import type { Viaje, Ruta, Usuario, Punto, Reserva, OcupacionReserva, PuntoGeografico} from '../../../types';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { reservaService } from '../../reservas/api/reservaService';
@@ -36,6 +36,8 @@ export const ViajesPage = () => {
   // Estado para controlar el modal de detalle del viaje
   const [viajeSeleccionado, setViajeSeleccionado] = useState<Viaje | null>(null);
 
+  console.log("viajes: ", viajes)
+  console.log("viajeSeleccionado: ", viajeSeleccionado)
   const {
     register,
     handleSubmit,
@@ -47,8 +49,8 @@ export const ViajesPage = () => {
     defaultValues: {
       idRuta: '',
       idChofer: '',
-      fechaHoraSalida: '',
-      fechaHoraLlegada: '',
+      fechaHoraInicio: '',
+      fechaHoraFin: '',
       capacidadPasajeros: 4,
       capacidadValijas: 4,
       precio: 0,
@@ -183,12 +185,12 @@ export const ViajesPage = () => {
     setValue('idRuta', viaje.idRuta || '');
     setValue('idChofer', viaje.idChofer || '');
     setValue(
-      'fechaHoraSalida',
-      viaje.fechaHoraSalida ? new Date(viaje.fechaHoraSalida).toISOString().slice(0, 16) : ''
+      'fechaHoraInicio',
+      viaje.fechaHoraInicio ? new Date(viaje.fechaHoraInicio).toISOString().slice(0, 16) : ''
     );
     setValue(
-      'fechaHoraLlegada',
-      viaje.fechaHoraLlegada ? new Date(viaje.fechaHoraLlegada).toISOString().slice(0, 16) : ''
+      'fechaHoraFin',
+      viaje.fechaHoraFin ? new Date(viaje.fechaHoraFin).toISOString().slice(0, 16) : ''
     );
     setValue('capacidadPasajeros', viaje.capacidadPasajeros ?? 4);
     setValue('capacidadValijas', viaje.capacidadValijas ?? 4);
@@ -200,8 +202,8 @@ export const ViajesPage = () => {
     reset({
       idRuta: '',
       idChofer: '',
-      fechaHoraSalida: '',
-      fechaHoraLlegada: '',
+      fechaHoraInicio: '',
+      fechaHoraFin: '',
       capacidadPasajeros: 4,
       capacidadValijas: 4,
       precio: 0,
@@ -234,8 +236,100 @@ export const ViajesPage = () => {
     return c ? `${c.nombre} ${c.apellido}` : 'Sin chofer';
   };
 
+  const recortarTexto = (texto: string, max: number =70): string => {
+    if (!texto) return '';
+    return texto.length > max ? `${texto.substring(0, max)}...` : texto;
+  };
+
   // Helper para construir la lista de puntos a mostrar en el Modal
   const obtenerPuntosRuta = (viaje: Viaje): PuntoDetalle[] => {
+    console.log("viaje: ", viaje)
+    const nombreRuta = obtenerNombreRuta(viaje);
+    const esViajePrivado = 
+      !viaje.idRuta || 
+      viaje.tipo === 'PRIVADO' || 
+      nombreRuta.toLowerCase().includes('privada');
+
+    if (esViajePrivado) {
+      // Buscar si el viaje tiene una reserva vinculada en el estado local de reservas
+      const reservaAsociada = reservas.find((r) => {
+        const idViajeReserva = typeof r.viaje === 'object' && r.viaje !== null ? r.viaje.id : r.viaje;
+        return idViajeReserva === viaje.id;
+      });
+
+      // Extraer Origen
+      let origenStr = 'Origen Privado';
+      let direccionOrigen = '';
+
+      if (typeof viaje.origen === 'object' && viaje.origen !== null) {
+        origenStr = (viaje.origen as PuntoGeografico).nombre || 'Origen Privado';
+        direccionOrigen = (viaje.origen as PuntoGeografico).direccion || origenStr;
+      } else if (typeof viaje.origen === 'string' && viaje.origen) {
+        origenStr = viaje.origen;
+        direccionOrigen = viaje.origen;
+      } else if (reservaAsociada?.origen) {
+        origenStr = reservaAsociada.origen;
+        direccionOrigen = reservaAsociada.origen;
+      }
+
+      // Extraer Destino
+      let destinoStr = 'Destino Privado';
+      let direccionDestino = '';
+
+      if (typeof viaje.destino === 'object' && viaje.destino !== null) {
+        destinoStr = (viaje.destino as PuntoGeografico).nombre || 'Destino Privado';
+        direccionDestino = (viaje.destino as PuntoGeografico).direccion || destinoStr;
+      } else if (typeof viaje.destino === 'string' && viaje.destino) {
+        destinoStr = viaje.destino;
+        direccionDestino = viaje.destino;
+      } else if (reservaAsociada?.destino) {
+        destinoStr = reservaAsociada.destino;
+        direccionDestino = reservaAsociada.destino;
+      }
+
+      // Si origen y destino siguen vacíos, intentar parsear la cadena "Ruta Privada: Origen - Destino"
+      if (origenStr === 'Origen Privado' && nombreRuta.includes(' - ')) {
+        const partes = nombreRuta.replace(/^Ruta Privada:\s*/i, '').split(' - ');
+        if (partes.length >= 2) {
+          origenStr = partes[0].trim();
+          direccionOrigen = partes[0].trim();
+          destinoStr = partes[1].trim();
+          direccionDestino = partes[1].trim();
+        }
+      }
+
+      const formatoFechaHora = (fechaStr?: string) => {
+        if (!fechaStr) return '-';
+        const fecha = new Date(fechaStr);
+        return isNaN(fecha.getTime())
+          ? '-'
+          : fecha.toLocaleString([], {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+      };
+
+      return [
+        {
+          nombre: origenStr,
+          direccion: direccionOrigen,
+          horaEstimada: formatoFechaHora(viaje.fechaHoraInicio),
+          pasajerosDisponibles: viaje.capacidadPasajeros ?? 0,
+          valijasDisponibles: viaje.capacidadValijas ?? 0,
+        },
+        {
+          nombre: destinoStr,
+          direccion: direccionDestino,
+          horaEstimada: formatoFechaHora(viaje.fechaHoraFin),
+          pasajerosDisponibles: 0,
+          valijasDisponibles: 0,
+        },
+      ];
+    }
+    
     const rutaCompleta = rutasDisponibles.find((r) => r.idRuta === viaje.idRuta);
     const elementos = rutaCompleta?.puntos || [];
 
@@ -315,10 +409,10 @@ export const ViajesPage = () => {
         };
 
         let horaEstimada = '-';
-        if (esOrigen && viaje.fechaHoraSalida) {
-          horaEstimada = formatoFechaHora(viaje.fechaHoraSalida);
-        } else if (esDestino && viaje.fechaHoraLlegada) {
-          horaEstimada = formatoFechaHora(viaje.fechaHoraLlegada);
+        if (esOrigen && viaje.fechaHoraInicio) {
+          horaEstimada = formatoFechaHora(viaje.fechaHoraInicio);
+        } else if (esDestino && viaje.fechaHoraFin) {
+          horaEstimada = formatoFechaHora(viaje.fechaHoraFin);
         } else if ('horaEstimada' in item && typeof item.horaEstimada === 'string' && item.horaEstimada) {
           horaEstimada = item.horaEstimada;
         }
@@ -366,7 +460,7 @@ export const ViajesPage = () => {
                 <option value="">Seleccione una ruta...</option>
                 {rutasDisponibles.map((r) => (
                   <option key={r.idRuta} value={r.idRuta}>
-                    {r.nombre}
+                    {recortarTexto(r.nombre)}
                   </option>
                 ))}
               </select>
@@ -403,14 +497,14 @@ export const ViajesPage = () => {
               <Input
                 type="datetime-local"
                 label="Fecha/Hora Salida"
-                error={errors.fechaHoraSalida?.message}
-                {...register('fechaHoraSalida')}
+                error={errors.fechaHoraInicio?.message}
+                {...register('fechaHoraInicio')}
               />
               <Input
                 type="datetime-local"
                 label="Fecha/Hora Llegada"
-                error={errors.fechaHoraLlegada?.message}
-                {...register('fechaHoraLlegada')}
+                error={errors.fechaHoraFin?.message}
+                {...register('fechaHoraFin')}
               />
             </div>
 
@@ -494,13 +588,13 @@ export const ViajesPage = () => {
                       {viaje.idChofer ? obtenerNombreChofer(viaje.idChofer) : 'Sin chofer'}
                     </td>
                     <td className="py-3 px-3 text-xs whitespace-nowrap">
-                      {viaje.fechaHoraSalida
-                        ? new Date(viaje.fechaHoraSalida).toLocaleString()
+                      {viaje.fechaHoraInicio
+                        ? new Date(viaje.fechaHoraInicio).toLocaleString()
                         : '-'}
                     </td>
                     <td className="py-3 px-3 text-xs whitespace-nowrap">
-                      {viaje.fechaHoraLlegada
-                        ? new Date(viaje.fechaHoraLlegada).toLocaleString()
+                      {viaje.fechaHoraFin
+                        ? new Date(viaje.fechaHoraFin).toLocaleString()
                         : '-'}
                     </td>
                     <td className="py-3 px-3 text-center font-medium text-slate-800">
@@ -559,7 +653,7 @@ export const ViajesPage = () => {
             <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50">
               <div>
                 <h3 className="text-lg font-bold text-slate-800">
-                  Detalle del Viaje: <span className="text-amber-600">{obtenerNombreRuta(viajeSeleccionado)}</span>
+                  Detalle del Viaje: <span className="text-amber-600">{recortarTexto(obtenerNombreRuta(viajeSeleccionado))}</span>
                 </h3>
                 <p className="text-xs text-slate-500">
                   Chofer: {obtenerNombreChofer(viajeSeleccionado.idChofer)}
@@ -580,8 +674,8 @@ export const ViajesPage = () => {
                   <tr>
                     <th className="py-2.5 px-4 border-b">Horario</th>
                     <th className="py-2.5 px-4 border-b">Punto / Parada</th>
-                    <th className="py-2.5 px-4 border-b text-center">Pasajeros Disp.</th>
-                    <th className="py-2.5 px-4 border-b text-center">Valijas Disp.</th>
+                    <th className="py-2.5 px-4 border-b text-center">Pasajeros {viajeSeleccionado.tipo === 'PRIVADO' ? '' : 'Disp.'}</th>
+                    <th className="py-2.5 px-4 border-b text-center">Valijas {viajeSeleccionado.tipo === 'PRIVADO' ? '' : 'Disp.'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

@@ -1,6 +1,6 @@
 
 import { apiFetch } from '../../../api/apiClient';
-import type { Reserva, OcupacionReserva } from '../../../types';
+import type { Reserva, OcupacionReserva, CrearReservaPrivadaFormData } from '../../../types';
 import type { ReservaFormData } from '../schemas/reservaSchema';
 
 export const reservaService = {
@@ -26,6 +26,13 @@ export const reservaService = {
 
   crear: async (data: ReservaFormData): Promise<Reserva> => {
     return apiFetch<Reserva>('/reserva', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  crearPrivada: async (data: CrearReservaPrivadaFormData): Promise<Reserva> => {
+    return apiFetch<Reserva>('/reserva/privada', {
       method: 'POST',
       body: JSON.stringify(data),
     });

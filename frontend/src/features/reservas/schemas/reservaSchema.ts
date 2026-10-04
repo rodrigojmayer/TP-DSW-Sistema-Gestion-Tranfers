@@ -1,11 +1,12 @@
 import { z } from 'zod';
 
-// Campos compartidos obligatorios para cualquier tipo de reserva
+// Campos compartidos base
 const reservaBase = {
   tipoViaje: z.enum(['COMPARTIDO', 'PRIVADO'] as const, {
     message: 'Debe seleccionar un tipo de viaje válido',
   }),
-  idViaje: z.string().min(1, 'Debe seleccionar un viaje programado'),
+  // 💡 Permite string opcional o cadena vacía inicialmente
+  idViaje: z.string().optional().or(z.literal('')),
   origen: z.string().min(1, 'Debe ingresar o seleccionar un origen'),
   destino: z.string().min(1, 'Debe ingresar o seleccionar un destino'),
   asiento: z.coerce
@@ -15,7 +16,7 @@ const reservaBase = {
     .int('Debe ser un número entero'),
   cantValijas: z.coerce
     .number({ message: 'Debe ingresar un número válido' })
-    .min(0, 'Minimo 0 valijas')
+    .min(0, 'Mínimo 0 valijas')
     .max(60, 'El máximo de valijas por reserva es 60')
     .int('Debe ser un número entero')
     .default(0),
@@ -52,13 +53,29 @@ const reservaInvitadoSchema = z.object({
     .min(8, 'Teléfono obligatorio para el servicio de transfer'),
 });
 
-// Unimos ambos esquemas discriminando por la clave 'tipoReserva'
-export const reservaSchema = z.discriminatedUnion('tipoReserva', [
-  reservaLogueadoSchema,
-  reservaInvitadoSchema,
-]);
+// Función de refinamiento condicional para validar 'idViaje' según el 'tipoViaje'
+const validarTipoViaje = (
+  data: z.infer<typeof reservaLogueadoSchema> | z.infer<typeof reservaInvitadoSchema>,
+  ctx: z.RefinementCtx
+) => {
+  if (data.tipoViaje === 'COMPARTIDO' && (!data.idViaje || data.idViaje.trim() === '')) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Debe seleccionar un viaje programado',
+      path: ['idViaje'],
+    });
+  }
+};
 
-// Alias de exportación para resolver la importación en ReservasPage.tsx
+// Unimos ambos esquemas y aplicamos la refinación condicional
+export const reservaSchema = z
+  .discriminatedUnion('tipoReserva', [
+    reservaLogueadoSchema,
+    reservaInvitadoSchema,
+  ])
+  .superRefine(validarTipoViaje);
+
+// Alias de exportación
 export const crearReservaSchema = reservaSchema;
 
 export type ReservaFormData = z.infer<typeof reservaSchema>;
