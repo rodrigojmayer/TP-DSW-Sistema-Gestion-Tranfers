@@ -7,7 +7,7 @@ import { rutaService } from '../../rutas/api/rutaService';
 import { usuarioService } from '../../usuarios/api/usuarioService';
 // import { puntoService } from '../../puntos/api/puntoService';
 import { useAuthStore } from '../../../store/authStore';
-import type { Viaje, Ruta, Usuario, Punto, Reserva} from '../../../types';
+import type { Viaje, Ruta, Usuario, Punto, Reserva, OcupacionReserva} from '../../../types';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { reservaService } from '../../reservas/api/reservaService';
@@ -31,6 +31,7 @@ export const ViajesPage = () => {
   const [cargando, setCargando] = useState(true);
   const [idEditando, setIdEditando] = useState<string | null>(null);
   const [reservas, setReservas] = useState<Reserva[]>([]);
+  const [ocupacionesViaje, setOcupacionesViaje] = useState<OcupacionReserva[]>([]);
 
   // Estado para controlar el modal de detalle del viaje
   const [viajeSeleccionado, setViajeSeleccionado] = useState<Viaje | null>(null);
@@ -55,19 +56,73 @@ export const ViajesPage = () => {
   });
 
   // Helper para consultar viajes según el rol del usuario
+  // const obtenerViajesSegunRol = useCallback(async (): Promise<Viaje[]> => {
+  //   if (user?.rol === 'ADMIN') {
+  //     return await viajeService.obtenerTodosAdmin();
+  //   }
+  //   if (user?.rol === 'CLIENTE') {
+  //     return await viajeService.obtenerMisViajes();
+  //   }
+  //   return await viajeService.obtenerPublicos();
+  // }, [user]);
   const obtenerViajesSegunRol = useCallback(async (): Promise<Viaje[]> => {
+    // 1. Administrador: ve absolutamente todos los viajes
     if (user?.rol === 'ADMIN') {
       return await viajeService.obtenerTodosAdmin();
     }
+
+    // 2. Cliente: ve los compartidos/públicos + sus viajes privados
     if (user?.rol === 'CLIENTE') {
-      return await viajeService.obtenerMisViajes();
+      const [publicos, misViajes] = await Promise.all([
+        viajeService.obtenerPublicos().catch(() => []),
+        viajeService.obtenerMisViajes().catch(() => []),
+      ]);
+
+      // Combinar sin duplicar (por id)
+      const mapaViajes = new Map<string, Viaje>();
+      [...publicos, ...misViajes].forEach((v) => mapaViajes.set(v.id, v));
+
+      return Array.from(mapaViajes.values());
     }
+
+    // 3. Invitados u otros roles: ven solo los viajes compartidos/públicos
     return await viajeService.obtenerPublicos();
   }, [user]);
+
+  useEffect(() => {
+    // Si no hay viaje seleccionado, no iniciamos ninguna petición
+    if (!viajeSeleccionado) {
+      return;
+    }
+
+    let cancelado = false;
+
+    reservaService
+      .obtenerOcupacionPorViaje(viajeSeleccionado.id)
+      .then((data) => {
+        if (!cancelado) {
+          setOcupacionesViaje(data);
+        }
+      })
+      .catch(() => {
+        if (!cancelado) {
+          setOcupacionesViaje([]);
+        }
+      });
+
+    // Función de limpieza: resetea el estado y evita race conditions al desmontar o cambiar de viaje
+    return () => {
+      cancelado = true;
+      setOcupacionesViaje([]);
+    };
+  }, [viajeSeleccionado]);
 
   // Carga de datos auxiliares (Rutas y Choferes) y Viajes
   const cargarDatos = useCallback(async () => {
     try {
+      const dataRutas = await rutaService.obtenerTodas().catch(() => []);
+      setRutasDisponibles(dataRutas);
+      
       if (user?.rol === 'ADMIN') {
         const [dataViajes, dataRutas, dataUsuarios, dataReservas] = await Promise.all([
           obtenerViajesSegunRol(),
@@ -203,12 +258,15 @@ export const ViajesPage = () => {
       .sort((a, b) => a.orden - b.orden);
 
     // 2. Mapear las reservas asociadas a este viaje al formato ReservaMinima
-    const reservasDelViaje: ReservaMinima[] = reservas
-      .filter((r) => {
-        const idViajeReserva = typeof r.viaje === 'object' && r.viaje !== null ? r.viaje.id : r.viaje;
-        return idViajeReserva === viaje.id;
-      })
-      .map((r) => ({
+    // Si es ADMIN usa la lista completa de 'reservas'; si no, usa las 'ocupacionesViaje' anónimas
+    const fuenteReservas = esAdmin
+      ? reservas.filter((r) => {
+          const idViajeReserva = typeof r.viaje === 'object' && r.viaje !== null ? r.viaje.id : r.viaje;
+          return idViajeReserva === viaje.id;
+        })
+      : ocupacionesViaje;
+
+    const reservasDelViaje: ReservaMinima[] = fuenteReservas.map((r) => ({
         origen: r.origen || '',
         destino: r.destino || '',
         cantPasajeros: r.cantPasajeros ?? 1,

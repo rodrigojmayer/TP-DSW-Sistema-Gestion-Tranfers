@@ -3,6 +3,7 @@ export type RolUsuario = 'ADMIN' | 'CLIENTE' | 'OPERADOR' | 'CHOFER';
 export interface UsuarioBackend {
   id: string;
   usuario: string;
+  password: string;
   nombre: string;
   apellido: string;
   email: string;
@@ -14,7 +15,7 @@ export interface UsuarioBackend {
 
 export type Usuario = Omit<UsuarioBackend, 'id'> & {
   idUsuario: string;
-  id?: string; // Permite p.id sin romper la firma de MikroORM
+  id?: string; 
   dni?: string;
   nroLicencia?: string;
   vencimientoLicencia?: string;
@@ -25,10 +26,10 @@ export interface Pasajero {
   nombre: string;
   apellido: string;
   dni: string;
-  idReserva?: string; // Para saber a qué reserva pertenece
+  idReserva?: string; 
 }
 
-// --- VEHÍCULOS Y AGENDA ---
+
 export interface ModeloVehiculo {
   idModelo: string | number;
   marca: string;
@@ -57,9 +58,11 @@ export interface AgendaVehiculo {
 // --- RUTAS (Para viajes compartidos) ---
 export interface PuntoRutaBackend {
   id?: string;
+  ruta_id?: string;
+  punto_id?: string;
   orden: number;
-  idPunto?: string;
-  direccion?: string;
+  nombre?: string;
+  // Relación populada desde el backend con la tabla 'punto'
   punto?: Punto;
 }
 export type PuntoRuta = Omit<PuntoRutaBackend, 'id'> & {
@@ -75,7 +78,6 @@ export interface PuntoRutaInput {
 export interface RutaBackend {
   id: string;
   nombre: string;
-  puntosRuta?: PuntoRuta[]; 
   puntos?: PuntoRuta[];    
   origen: string; 
   destino: string; 
@@ -105,6 +107,17 @@ export type Punto = Omit<PuntoBackend, 'id'> & {
 
 export type TipoPunto = 'Terminal' | 'Punto Intermedio' | 'Aeropuerto';
 
+export interface PuntoBackend {
+  id: string;
+  nombre: string;
+  direccion: string;
+  tipo: TipoPunto;
+  latitud: string;
+  longitud: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface CrearRutaInput {
     nombre: string;
     puntos: {
@@ -113,13 +126,63 @@ export interface CrearRutaInput {
     }[];
 }
 
+// --- VIAJES ---
+export interface ViajeBackend {
+  id: string;
+  tipo: 'COMPARTIDO' | 'PRIVADO';
+  fechaHoraInicio: string;
+  fechaHoraFin?: string;
+  capacidadPasajeros: number;
+  capacidadValijas: number;
+  precioBase: number;
+  ruta?: {
+    id: string;
+    nombre: string;
+  } | string;
+  // AGREGAR ESTAS DOS PROPIEDADES:
+  idChofer?: string;
+  chofer?: {
+    id: string;
+    nombre?: string;
+    apellido?: string;
+    email?: string;
+  } | string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Parada {
+  id?: string;
+  nombre: string;
+}
+
 export interface Viaje {
-  idViaje: string;
-  idRuta: string;
-  idChofer: string;
+  id: string;
+  idRuta?: string;
+  idChofer?: string;
   fechaHoraSalida: string;
+  fechaHoraLlegada?: string;
   precio: number;
-  estado: 'PROGRAMADO' | 'EN_CURSO' | 'FINALIZADO' | 'CANCELADO';
+  estado?: 'PROGRAMADO' | 'EN_CURSO' | 'FINALIZADO' | 'CANCELADO';
+  capacidadPasajeros?: number;
+  capacidadValijas?: number;
+  rutaNombre?: string;
+  // estado: string;
+  tipo?: 'COMPARTIDO' | 'PRIVADO';
+  origen?: string;
+  destino?: string;
+  fechaHora?: string; 
+  punto_ruta?: PuntoRuta[];
+  chofer?: {
+    id: string;
+    nombre?: string;
+    apellido?: string;
+    email?: string;
+  } | string; 
+  // paradas?: Parada[];
+  paradas?: Array<{ nombre: string } | string>;
+  // AGREGAR ESTA PROPIEDAD POBLADA:
+  ruta?: RutaBackend;
 }
 
 // --- RESERVAS (Herencia) ---
@@ -172,21 +235,31 @@ export type ReservaViaje = ReservaPrivado | ReservaCompartido;
 export type EstadoReserva = 'RESERVADO' | 'PAGADO' | 'CANCELADO';
 
 export interface PasajeroDatos {
-  nombre: string;
-  apellido: string;
-  dni: string;
-  email: string;
-  telefono: string;
+    nombre?: string;
+    apellido?: string;
+    dni?: string;
+    email?: string;
+    telefono?: string;
 }
 
 export interface Reserva {
-  idReserva: string;
-  idViaje: string;
-  tipoReserva: 'LOGUEADO' | 'INVITADO';
-  idCliente?: string; // Presente solo si el cliente estaba autenticado
-  pasajero: PasajeroDatos; // Datos finales de la persona que se sube al vehículo
-  asiento: number;
-  precioFinal: number;
-  estado: EstadoReserva;
-  fechaReserva: string;
+  id: string;
+  usuario: Usuario | string;
+  viaje: Viaje | string;
+  origen: string;
+  destino: string;
+  cantPasajeros: number;
+  cantValijas: number;
+  precio: number;
+  pagoAbonado: boolean;
+  habilitado: boolean;
+  createdAt?: string | Date;
+}
+
+export interface OcupacionReserva {
+  id: string;
+  origen: string;
+  destino: string;
+  cantPasajeros: number;
+  cantValijas: number;
 }

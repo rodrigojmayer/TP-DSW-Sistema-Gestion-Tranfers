@@ -9,13 +9,15 @@ const reservaBase = {
   origen: z.string().min(1, 'Debe ingresar o seleccionar un origen'),
   destino: z.string().min(1, 'Debe ingresar o seleccionar un destino'),
   asiento: z.coerce
-    .number()
-    .min(1, 'La cantidad de asientos debe ser al menos 1')
-    .max(60, 'El máximo de asientos permitido es 60'),
+    .number({ message: 'Debe ingresar un número válido' })
+    .min(1, 'Mínimo 1 pasajero')
+    .max(60, 'El máximo de asientos permitido es 60')
+    .int('Debe ser un número entero'),
   cantValijas: z.coerce
     .number({ message: 'Debe ingresar un número válido' })
-    .min(0, 'Las valijas no pueden ser un valor negativo')
+    .min(0, 'Minimo 0 valijas')
     .max(60, 'El máximo de valijas por reserva es 60')
+    .int('Debe ser un número entero')
     .default(0),
   precioFinal: z.coerce.number().min(0.01, 'El precio debe ser mayor a 0'),
 };

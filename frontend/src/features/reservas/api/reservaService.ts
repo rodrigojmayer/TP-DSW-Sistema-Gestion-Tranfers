@@ -1,6 +1,6 @@
 
 import { apiFetch } from '../../../api/apiClient';
-import type { Reserva } from '../../../types';
+import type { Reserva, OcupacionReserva } from '../../../types';
 import type { ReservaFormData } from '../schemas/reservaSchema';
 
 export const reservaService = {
@@ -18,6 +18,10 @@ export const reservaService = {
   
   obtenerPorViaje: async (idViaje: string): Promise<Reserva[]> => {
     return apiFetch<Reserva[]>(`/reserva/viaje/${idViaje}`);
+  },
+  
+  obtenerOcupacionPorViaje: async (idViaje: string): Promise<OcupacionReserva[]> => {
+    return apiFetch<OcupacionReserva[]>(`/reserva/viaje/${idViaje}/ocupacion`);
   },
 
   crear: async (data: ReservaFormData): Promise<Reserva> => {

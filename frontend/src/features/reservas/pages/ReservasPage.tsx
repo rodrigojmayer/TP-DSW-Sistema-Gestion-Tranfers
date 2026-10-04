@@ -10,6 +10,8 @@ import type { Reserva, Viaje, Usuario, Ruta } from '../../../types';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { rutaService } from '../../rutas/api/rutaService';
+import { InputAutocompleteGeo } from '../../../components/ui/InputAutocompleteGeo';
+import { calcularDistanciaHaversine, type Coordenada } from '../../../services/geoService';
 
 export const ReservasPage = () => {
   const user = useAuthStore((state) => state.user);
@@ -61,7 +63,9 @@ export const ReservasPage = () => {
   const destinoSeleccionado = useWatch({ control, name: 'destino'});
   const asientoIngresado = useWatch({ control, name: 'asiento' }) || 1;
   const valijasIngresadas = useWatch({ control, name: 'cantValijas' }) || 0;
-
+  const [coordsOrigen, setCoordsOrigen] = useState<Coordenada | null>(null);
+  const [coordsDestino, setCoordsDestino] = useState<Coordenada | null>(null);
+  // const [distanciaKm, setDistanciaKm] = useState<number | null>(null);
 
   // 1. Obtener el objeto completo del viaje seleccionado
   const viajeSeleccionado = useMemo(() => {
@@ -131,6 +135,13 @@ export const ReservasPage = () => {
     }
   }, [estaLogueado, user, setValue]);
 
+  const distanciaKm = useMemo(() => {
+    if (tipoViaje === 'PRIVADO' && coordsOrigen && coordsDestino) {
+      return calcularDistanciaHaversine(coordsOrigen, coordsDestino);
+    }
+    return null;
+  }, [tipoViaje, coordsOrigen, coordsDestino]);
+
 //   useEffect(() => {
 //   if (idViajeSeleccionado) {
 //     reservaService.obtenerPorViaje(idViajeSeleccionado) // Endpoint backend para traer reservas de un viaje
@@ -177,6 +188,20 @@ export const ReservasPage = () => {
   // }, [viajeSeleccionado, asientoIngresado, setValue]);
 
   useEffect(() => {
+
+    // Calculamos la equivalencia de ocupación (cada valija es el 50% de un pasajero)
+    const pasajerosEquivalentes = asientoIngresado + valijasIngresadas * 0.5;
+
+    if (tipoViaje === 'PRIVADO') {
+      if (distanciaKm && distanciaKm > 0) {
+        const precioPrivado = distanciaKm * 2000;
+        setValue('precioFinal', Math.round(precioPrivado));
+      } else {
+        setValue('precioFinal', 0);
+      }
+      return;
+    }
+
     // Si no hay viaje seleccionado o el precio no existe, reseteamos a 0
     if (!viajeSeleccionado || !viajeSeleccionado.precio) {
       setValue('precioFinal', 0);
@@ -184,13 +209,8 @@ export const ReservasPage = () => {
     }
 
     const precioBase = viajeSeleccionado.precio;
-
-    // Calculamos la equivalencia de ocupación (cada valija es el 50% de un pasajero)
-    const pasajerosEquivalentes = asientoIngresado + valijasIngresadas * 0.5;
-
-    // Si es viaje PRIVADO o no hay paradas seleccionadas, cobramos el viaje completo
+    // Si no hay paradas seleccionadas, cobramos el viaje completo
     if (
-      tipoViaje === 'PRIVADO' ||
       !origenSeleccionado ||
       !destinoSeleccionado ||
       listaParadas.length < 2
@@ -219,6 +239,7 @@ export const ReservasPage = () => {
   }, [
     viajeSeleccionado,
     tipoViaje,
+    distanciaKm,
     origenSeleccionado,
     destinoSeleccionado,
     listaParadas,
@@ -407,6 +428,27 @@ export const ReservasPage = () => {
 
   const maxValijasDisponibles = calcularLimiteValijas();
 
+  const limitePasajeros = tipoViaje === 'PRIVADO' ? 4 : maxAsientosDisponibles;
+  const limiteValijas = tipoViaje === 'PRIVADO' ? 4 : maxValijasDisponibles;
+  
+  
+  useEffect(() => {
+    if (asientoIngresado < 1) {
+      setValue('asiento', 1);
+    } else if (asientoIngresado > limitePasajeros && limitePasajeros > 0) {
+      setValue('asiento', limitePasajeros);
+    }
+  }, [limitePasajeros, asientoIngresado, setValue]);
+
+  // Control de límites para Valijas
+  useEffect(() => {
+    if (valijasIngresadas < 0) {
+      setValue('cantValijas', 0);
+    } else if (valijasIngresadas > limiteValijas && limiteValijas >= 0) {
+      setValue('cantValijas', limiteValijas);
+    }
+  }, [limiteValijas, valijasIngresadas, setValue]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -457,21 +499,21 @@ export const ReservasPage = () => {
     };
   }, [user, estaLogueado]);
 
-  useEffect(() => {
-    if (asientoIngresado < 1) {
-      setValue('asiento', 1);
-    } else if (asientoIngresado > maxAsientosDisponibles && maxAsientosDisponibles > 1) {
-      setValue('asiento', maxAsientosDisponibles);
-    }
-  }, [maxAsientosDisponibles, asientoIngresado, setValue]);
+  // useEffect(() => {
+  //   if (asientoIngresado < 1) {
+  //     setValue('asiento', 1);
+  //   } else if (asientoIngresado > maxAsientosDisponibles && maxAsientosDisponibles > 1) {
+  //     setValue('asiento', maxAsientosDisponibles);
+  //   }
+  // }, [maxAsientosDisponibles, asientoIngresado, setValue]);
 
-  useEffect(() => {
-    if (valijasIngresadas < 0) {
-      setValue('cantValijas', 0);
-    } else if (valijasIngresadas > maxValijasDisponibles) {
-      setValue('cantValijas', maxValijasDisponibles);
-    }
-  }, [maxValijasDisponibles, valijasIngresadas, setValue]);
+  // useEffect(() => {
+  //   if (valijasIngresadas < 0) {
+  //     setValue('cantValijas', 0);
+  //   } else if (valijasIngresadas > maxValijasDisponibles) {
+  //     setValue('cantValijas', maxValijasDisponibles);
+  //   }
+  // }, [maxValijasDisponibles, valijasIngresadas, setValue]);
 
   const handleViajeSelect = (idViaje: string) => {
     const seleccionado = viajes.find((v) => v.id === idViaje);
@@ -762,7 +804,7 @@ export const ReservasPage = () => {
           {/* ORIGEN Y DESTINO DINÁMICOS */}
           {tipoViaje === 'PRIVADO' ? (
             <div className="grid grid-cols-1 gap-3">
-              <div className="flex flex-col gap-1">
+              {/* <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-slate-700">Dirección Exacta de Origen</label>
                 <input 
                   type="text" 
@@ -782,7 +824,31 @@ export const ReservasPage = () => {
                   className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none"
                 />
                 {errors.destino && <span className="text-xs text-red-500">{errors.destino.message}</span>}
-              </div>
+              </div> */}
+              <InputAutocompleteGeo
+                label="Origen Exacto / Localidad"
+                placeholder="Ej: Rosario, Santa Fe"
+                value={origenSeleccionado || ''}
+                onChangeText={(val) => setValue('origen', val)}
+                onSeleccionarCoordenada={(coords) => setCoordsOrigen(coords)}
+                error={errors.origen?.message}
+              />
+
+              <InputAutocompleteGeo
+                label="Destino Exacto / Localidad"
+                placeholder="Ej: Córdoba, Córdoba"
+                value={destinoSeleccionado || ''}
+                onChangeText={(val) => setValue('destino', val)}
+                onSeleccionarCoordenada={(coords) => setCoordsDestino(coords)}
+                error={errors.destino?.message}
+              />
+
+              {distanciaKm !== null && (
+                <div className="p-2 bg-amber-50 border border-amber-200 rounded-md text-xs font-semibold text-amber-800 flex justify-between items-center">
+                  <span>Distancia estimada del trayecto:</span>
+                  <span className="text-sm font-bold text-amber-900">{distanciaKm} km</span>
+                </div>
+              )}
             </div>
           ) : (
             /* VISTA PARA VIAJE COMPARTIDO */
@@ -895,65 +961,67 @@ export const ReservasPage = () => {
             )}
           </div>
 
-          <div className="border-t border-slate-200 pt-4 grid grid-cols-3 gap-3">
+          <div className="border-t border-slate-200 pt-4 grid grid-cols-3 gap-3 items-start">
             {/* Cantidad Pasajeros */}
-            <div className="flex flex-col gap-1 justify-end">
+            <div className="relative flex flex-col gap-1">
               <label className="text-sm font-medium text-slate-700 min-h-5 flex items-center justify-between">
                 <span>Pasajeros</span>
                 <span className="text-xs text-amber-600 font-bold">
-                  (Máx: {maxAsientosDisponibles})
+                  (Máx: {limitePasajeros})
                 </span>
               </label>
 
               <input
                 type="number"
                 min={1}
-                max={maxAsientosDisponibles}
+                max={limitePasajeros}
                 {...register('asiento', { valueAsNumber: true })}
                 onInput={(e) => {
                   const el = e.currentTarget;
-                  if (Number(el.value) < 1 && el.value !== '') {
-                    el.value = '1';
-                  }
+                  if (Number(el.value) > limitePasajeros) el.value = String(limitePasajeros);
+                  if (Number(el.value) < 1 && el.value !== '') el.value = '1';
                 }}
                 className="w-full h-10 px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none"
               />
 
               {errors.asiento && (
-                <span className="text-xs text-red-500">{errors.asiento.message}</span>
+                <span className="absolute -bottom-5 left-0 text-xs text-red-500 whitespace-nowrap">
+                  {errors.asiento.message}
+                </span>
               )}
             </div>
 
             {/* Cantidad de Valijas */}
-            <div className="flex flex-col gap-1 justify-end">
+            <div className="relative flex flex-col gap-1">
               <label className="text-sm font-medium text-slate-700 min-h-5 flex items-center justify-between">
                 <span>Valijas</span>
                 <span className="text-xs text-amber-600 font-bold">
-                  (Máx: {maxValijasDisponibles})
+                  (Máx: {limiteValijas})
                 </span>
               </label>
 
               <input
                 type="number"
                 min={0}
-                max={maxValijasDisponibles}
+                max={limiteValijas}
                 {...register('cantValijas', { valueAsNumber: true })}
                 onInput={(e) => {
                   const el = e.currentTarget;
-                  if (Number(el.value) < 0 && el.value !== '') {
-                    el.value = '0';
-                  }
+                  if (Number(el.value) > limiteValijas) el.value = String(limiteValijas);
+                  if (Number(el.value) < 0 && el.value !== '') el.value = '0';
                 }}
                 className="w-full h-10 px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none"
               />
 
               {errors.cantValijas && (
-                <span className="text-xs text-red-500">{errors.cantValijas.message}</span>
+                <span className="absolute -bottom-5 left-0 text-xs text-red-500 whitespace-nowrap">
+                  {errors.cantValijas.message}
+                </span>
               )}
             </div>
 
             {/* Precio Total */}
-            <div className="flex flex-col gap-1 justify-end">
+            <div className="relative flex flex-col gap-1">
               <label className="text-sm font-medium text-slate-700 min-h-5 flex items-center">
                 Precio Total
               </label>
@@ -969,16 +1037,17 @@ export const ReservasPage = () => {
                 />
               </div>
               {errors.precioFinal && (
-                <span className="text-xs text-red-500">
+                <span className="absolute -bottom-5 left-0 text-xs text-red-500 whitespace-nowrap">
                   {errors.precioFinal.message}
                 </span>
               )}
             </div>
           </div>
-
-          <Button type="submit" isLoading={isSubmitting}>
-            {modoEdicion ? 'Guardar Cambios' : 'Confirmar Reserva'}
-          </Button>
+          <div className="mt-10">
+            <Button type="submit" isLoading={isSubmitting}>
+              {modoEdicion ? 'Guardar Cambios' : 'Confirmar Reserva'}
+            </Button>
+          </div>
         </form>
       </div>
 
