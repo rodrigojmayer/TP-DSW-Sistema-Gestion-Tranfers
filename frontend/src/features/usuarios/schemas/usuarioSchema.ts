@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { RolUsuario } from '../../../types';
 
-const ROLES_INTERNOS = ['ADMIN', 'OPERADOR', 'CHOFER'] as [
+const ROLES_INTERNOS = ['ADMIN', 'OPERADOR', 'CHOFER', 'CLIENTE'] as [
   RolUsuario,
   ...RolUsuario[],
 ];

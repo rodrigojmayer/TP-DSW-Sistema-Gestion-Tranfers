@@ -38,7 +38,7 @@ export const UsuariosPage = () => {
       
       if (user?.rol !== 'ADMIN') {
         setCargando(false);
-        setError('Ndereguerekoi permiso rehecha haguã ko página');
+        setError('No tiene permiso para ver esta página.');
         return;
       }
         setCargando(false);

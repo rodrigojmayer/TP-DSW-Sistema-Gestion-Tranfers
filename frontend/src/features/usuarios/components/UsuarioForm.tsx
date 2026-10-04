@@ -30,6 +30,7 @@ export const UsuarioForm = ({
     ) as unknown as Resolver<UsuarioFormData>, // <-- Tipado 100% seguro sin 'any'
     defaultValues: {
       usuario: '',
+      password: '',
       nombre: '',
       apellido: '',
       dni: '',
@@ -47,6 +48,7 @@ export const UsuarioForm = ({
     if (usuarioAEditar) {
       reset({
         usuario: usuarioAEditar.usuario,
+        password: usuarioAEditar.password,
         nombre: usuarioAEditar.nombre,
         apellido: usuarioAEditar.apellido,
         dni: usuarioAEditar.dni,
@@ -134,6 +136,12 @@ export const UsuarioForm = ({
           label="Usuario (Alias)"
           error={errors.usuario?.message}
           {...register('usuario')}
+        />
+        <Input
+          label="Password"
+          // type='password'
+          error={errors.usuario?.message}
+          {...register('password')}
         />
 
         <div className="grid grid-cols-2 gap-4">

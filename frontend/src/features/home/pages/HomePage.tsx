@@ -24,13 +24,14 @@ export const HomePage = () => {
           </p>
 
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={() => navigate('/reservas')}
-              className="w-full sm:w-auto px-8 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5"
-            >
-              Reservar Traslado Ahora
-            </button>
-
+            {user && (
+              <button
+                onClick={() => navigate('/reservas')}
+                className="w-full sm:w-auto px-8 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5"
+              >
+                Reservar Traslado Ahora
+              </button>
+            )}
             {!user && (
               <button
                 onClick={() => navigate('/login')}
@@ -94,7 +95,7 @@ export const HomePage = () => {
             <p className="text-slate-800 font-medium">Revisá la lista de salidas programadas y reservá tu pasaje.</p>
           </div>
           <button
-            onClick={() => navigate('/reservas')}
+            onClick={() => navigate('/viajes')}
             className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition"
           >
             Ver Salidas Disponibles

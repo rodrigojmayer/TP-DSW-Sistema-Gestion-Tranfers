@@ -34,13 +34,12 @@ export const router = createBrowserRouter([
     element: <AdminLayout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: 'reservas', element: <ReservasPage /> },
       { path: 'viajes', element: <ViajesPage /> },
 
       // Rutas exclusivas para ADMIN
       {
         element: <ProtectedRoute rolesPermitidos={['ADMIN']} />,
-        children: [
+        children: [       
           { path: 'usuarios', element: <UsuariosPage /> },
         ],
       },
@@ -56,6 +55,7 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute rolesPermitidos={['ADMIN', 'OPERADOR', 'CHOFER', 'CLIENTE']} />,
         children: [
+          { path: 'reservas', element: <ReservasPage /> },
           { path: 'perfil', element: <MiPerfilPage /> },
         ],
       },

@@ -16,13 +16,13 @@ export const Sidebar = () => {
     { label: 'Usuarios', path: '/usuarios', roles: ['ADMIN'], icon: UsersIcon },
     { label: 'Puntos', path: '/puntos', roles: ['ADMIN', 'OPERADOR'], icon: MapPinIcon },
     { label: 'Rutas', path: '/rutas', roles: ['ADMIN', 'OPERADOR'], icon: MapIcon },
-    { label: 'Viajes', path: '/viajes', roles: ['ADMIN', 'OPERADOR', 'CLIENTE', 'CHOFER'], icon: TruckIcon },
-    { label: 'Reservas', path: '/reservas', roles: ['ADMIN', 'OPERADOR', 'CLIENTE', 'CHOFER'], icon: ClipboardDocumentCheckIcon },
+    { label: 'Viajes', path: '/viajes', roles: ['ADMIN', 'OPERADOR', 'CLIENTE', 'CHOFER'], publico: false, icon: TruckIcon },
+    { label: 'Reservas', path: '/reservas', roles: ['ADMIN', 'OPERADOR', 'CLIENTE', 'CHOFER'], publico: false, icon: ClipboardDocumentCheckIcon },
   ];
 
   // Filtramos los ítems a los que el usuario tiene acceso
   const itemsFiltrados = menuItems.filter(
-    (item) => user?.rol && item.roles.includes(user.rol)
+    (item) => item.publico || (user?.rol && item.roles.includes(user.rol))
   );
 
   return (

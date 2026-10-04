@@ -12,6 +12,8 @@ interface SignUpForm {
   telefono: string;
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
 export const SignUpPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -66,7 +68,7 @@ export const SignUpPage: React.FC = () => {
     };
 
     try {
-      const res = await fetch('http://localhost:3000/api/usuario', {
+      const res = await fetch(`${API_URL}/usuario`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
