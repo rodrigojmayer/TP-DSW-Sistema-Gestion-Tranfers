@@ -2,6 +2,24 @@
 
 @import "tailwindcss";
 
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
 
 :root {
   --text: #6b6375;
@@ -55,7 +73,7 @@
   }
 }
 
-#root {
+/* #root {
   width: 1126px;
   max-width: 100%;
   margin: 0 auto;
@@ -65,7 +83,7 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-}
+} */
 
 body {
   margin: 0;

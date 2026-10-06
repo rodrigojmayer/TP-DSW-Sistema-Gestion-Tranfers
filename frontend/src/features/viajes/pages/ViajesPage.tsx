@@ -13,6 +13,16 @@ import { Button } from '../../../components/ui/Button';
 import { reservaService } from '../../reservas/api/reservaService';
 import { calcularDisponibilidadViaje, type PuntoRutaConOrden, type ReservaMinima } from '../../../utils/disponibilidad';
 
+// nuevas importaciones
+// import { useModalStore } from '../../../store/useModalStore';
+// import { ViajeDetalleContent } from '../components/ViajeDetalleContent';
+
+// // extraemos la funcion
+// export const ViajesPage = () => {
+//   const openModal = useModalStore((state) => state.openModal);
+
+
+
 // Estructura opcional de punto medio en la ruta
 interface PuntoDetalle {
   nombre: string;
