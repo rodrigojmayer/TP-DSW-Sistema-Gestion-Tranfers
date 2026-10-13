@@ -126,6 +126,22 @@ export interface CrearRutaInput {
     }[];
 }
 
+
+// traido de feature/page/viajePage por refactorizacion
+ //Estructura opcional de punto medio en la ruta
+
+export interface PuntoDetalle {
+  nombre: string;
+  direccion?: string;
+  horaEstimada: string;
+  pasajerosDisponibles: number;
+  valijasDisponibles: number;
+}
+
+
+
+
+
 // --- VIAJES ---
 export interface ViajeBackend {
   id: string;
@@ -178,20 +194,48 @@ export interface Viaje {
   tipo?: 'COMPARTIDO' | 'PRIVADO';
   // tipo?: string;
   origen?: string | PuntoGeografico;
-  destino?: string | PuntoGeografico; 
-  fechaHora?: string; 
+  destino?: string | PuntoGeografico;
+  fechaHora?: string;
   punto_ruta?: PuntoRuta[];
-  chofer?: {
-    id: string;
-    nombre?: string;
-    apellido?: string;
-    email?: string;
-  } | string; 
+  chofer?:
+    | {
+        id: string;
+        nombre?: string;
+        apellido?: string;
+        email?: string;
+      }
+    | string;
   // paradas?: Parada[];
   paradas?: Array<{ nombre: string } | string>;
   // AGREGAR ESTA PROPIEDAD POBLADA:
   ruta?: RutaBackend;
+
+  // 🟢 [MODIFICACIÓN] Añadida la propiedad opcional 'reservas' tipada de forma limpia
+  reservas?: Array<{
+    id?: string;
+    usuario?: Usuario | string;
+    idUsuario?: string;
+    [key: string]: unknown;
+  }>;
 }
+
+// 🟢 Interfaces de entrada/payload agregadas:
+export interface CrearViajeInput {
+  idRuta?: string;
+  idChofer?: string;
+  fechaHoraInicio: string;
+  fechaHoraFin?: string;
+  precio: number;
+  capacidadPasajeros?: number;
+  capacidadValijas?: number;
+  tipo: 'COMPARTIDO' | 'PRIVADO';
+  origen?: string | PuntoGeografico;
+  destino?: string | PuntoGeografico;
+}
+
+export type ActualizarViajeInput = Partial<CrearViajeInput>;
+
+
 
 // --- RESERVAS (Herencia) ---
 export interface ReservaViajeBase {

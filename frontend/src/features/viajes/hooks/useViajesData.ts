@@ -1,0 +1,83 @@
+import { useState, useEffect } from 'react';
+import { viajeService } from '../api/viajeService';
+
+export interface OcupacionInfo {
+  asientosTotales: number;
+  asientosOcupados: number;
+  asientosDisponibles: number;
+  porcentajeOcupacion: number;
+}
+
+// Helper seguro para extraer mensajes de error evitando 'any'
+function getErrorMessage(err: unknown, fallbackMessage: string): string {
+  if (err instanceof Error) return err.message;
+  return fallbackMessage;
+}
+
+export function useOcupacionViaje(viajeId?: string | number) {
+  const [ocupacion, setOcupacion] = useState<OcupacionInfo | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!viajeId) return;
+
+    let cancelado = false;
+
+    const cargarOcupacion = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const viaje = await viajeService.obtenerPorId(String(viajeId));
+
+        if (!cancelado) {
+          // 🟢 1. Usamos la propiedad `capacidadPasajeros` definida directamente en Viaje
+          const asientosTotales = viaje.capacidadPasajeros || 0;
+
+          // 🟢 2. Calculamos los ocupados según el array de paradas/ocupación o pasajes si existieran
+          // Si por el momento no tenés el listado de pasajes en la entidad Viaje, asumimos 0 o la longitud de punto_ruta
+          const asientosOcupados = 0;
+
+          const asientosDisponibles = Math.max(
+            0,
+            asientosTotales - asientosOcupados,
+          );
+          const porcentajeOcupacion =
+            asientosTotales > 0
+              ? Math.round((asientosOcupados / asientosTotales) * 100)
+              : 0;
+
+          setOcupacion({
+            asientosTotales,
+            asientosOcupados,
+            asientosDisponibles,
+            porcentajeOcupacion,
+          });
+        }
+      } catch (err: unknown) {
+        if (!cancelado) {
+          setError(
+            getErrorMessage(err, 'Error al obtener ocupación del viaje'),
+          );
+        }
+      } finally {
+        if (!cancelado) setLoading(false);
+      }
+    };
+
+    cargarOcupacion();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [viajeId]);
+
+  return {
+    ocupacion,
+    loading,
+    error,
+    estaLleno: ocupacion
+      ? ocupacion.asientosDisponibles === 0 && ocupacion.asientosTotales > 0
+      : false,
+  };
+}

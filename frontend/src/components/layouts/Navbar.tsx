@@ -13,9 +13,16 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
       <div className="w-full px-4 sm:px-8 h-16 flex items-center justify-between">
-        {/* LOGO + NOMBRE */}
+        {/* LOGO + ENLACES */}
         <div className="flex items-center gap-8">
-          <Link to="/" className="flex items-center gap-2">
+          <Link
+            to={
+              user?.rol === 'ADMIN' || user?.rol === 'OPERADOR'
+                ? '/admin/dashboard'
+                : '/admin/reservas'
+            }
+            className="flex items-center gap-2"
+          >
             <div className="bg-amber-500 text-white font-bold p-2 rounded-lg text-sm">
               TR
             </div>
@@ -24,49 +31,78 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* ENLACES DE NAVEGACIÓN HORIZONTAL */}
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              to="/viajes"
-              className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-            >
-              Viajes
-            </Link>
-            <Link
-              to="/reservas"
-              className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-            >
-              Reservas
-            </Link>
-            {user?.rol === 'ADMIN' && (
-              <>
+          {/* Menú visible SOLO para usuarios autenticados */}
+          {user && (
+            <nav className="hidden md:flex items-center gap-6">
+              {/* Visible para TODOS los usuarios logueados (ADMIN, OPERADOR, CHOFER, CLIENTE) */}
+              <Link
+                to="/admin/viajes"
+                className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+              >
+                Viajes
+              </Link>
+              <Link
+                to="/admin/reservas"
+                className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+              >
+                Reservas
+              </Link>
+
+              {/* Exclusivo ADMIN y OPERADOR */}
+              {(user.rol === 'ADMIN' || user.rol === 'OPERADOR') && (
+                <>
+                  <Link
+                    to="/admin/dashboard"
+                    className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/admin/rutas"
+                    className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+                  >
+                    Rutas
+                  </Link>
+                  <Link
+                    to="/admin/puntos"
+                    className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+                  >
+                    Puntos
+                  </Link>
+                </>
+              )}
+
+              {/* Exclusivo ADMIN */}
+              {user.rol === 'ADMIN' && (
                 <Link
-                  to="/puntos"
-                  className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-                >
-                  Puntos
-                </Link>
-                <Link
-                  to="/usuarios"
+                  to="/admin/usuarios"
                   className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
                 >
                   Usuarios
                 </Link>
-              </>
-            )}
-          </nav>
+              )}
+
+              {/* Mi Perfil */}
+              <Link
+                to="/perfil"
+                className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+              >
+                Perfil
+              </Link>
+            </nav>
+          )}
         </div>
 
-        {/* ÁREA DE USUARIO Y ACCIONES */}
+        {/* ACCIONES DE USUARIO / INGRESO */}
         <div className="flex items-center gap-4">
           {user ? (
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-gray-700">
-                {user.nombre} {user.apellido}
+                {user.nombre} {user.apellido || ''} ({user.rol})
               </span>
               <button
                 onClick={handleLogout}
-                className="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                className="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
               >
                 Cerrar Sesión
               </button>
@@ -84,6 +120,197 @@ export default function Navbar() {
     </header>
   );
 }
+
+// import { Link, useNavigate } from 'react-router-dom';
+// import { useAuthStore } from '../../store/authStore';
+
+// export default function Navbar() {
+//   const { user, logout } = useAuthStore();
+//   const navigate = useNavigate();
+
+//   const handleLogout = () => {
+//     logout();
+//     navigate('/login');
+//   };
+
+//   return (
+//     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
+//       <div className="w-full px-4 sm:px-8 h-16 flex items-center justify-between">
+//         {/* LOGO + ENLACES */}
+//         <div className="flex items-center gap-8">
+//           <Link
+//             to={user?.rol === 'ADMIN' ? '/admin/dashboard' : '/'}
+//             className="flex items-center gap-2"
+//           >
+//             <div className="bg-amber-500 text-white font-bold p-2 rounded-lg text-sm">
+//               TR
+//             </div>
+//             <span className="font-bold text-gray-900 text-lg">
+//               Transfers App
+//             </span>
+//           </Link>
+
+//           {/* Menú visible SOLO para usuarios autenticados */}
+//           {user && (
+//             <nav className="hidden md:flex items-center gap-6">
+//               <Link
+//                 to="/viajes"
+//                 className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+//               >
+//                 Viajes
+//               </Link>
+//               <Link
+//                 to="/reservas"
+//                 className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+//               >
+//                 Reservas
+//               </Link>
+
+//               {/* Exclusivo ADMIN */}
+//               {user.rol === 'ADMIN' && (
+//                 <>
+//                   <Link
+//                     to="/puntos"
+//                     className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+//                   >
+//                     Puntos
+//                   </Link>
+//                   <Link
+//                     to="/usuarios"
+//                     className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+//                   >
+//                     Usuarios
+//                   </Link>
+//                 </>
+//               )}
+
+//               {/* Exclusivo CLIENTE */}
+//               {user.rol === 'CLIENTE' && (
+//                 <Link
+//                   to="/perfil"
+//                   className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+//                 >
+//                   Perfil
+//                 </Link>
+//               )}
+//             </nav>
+//           )}
+//         </div>
+
+//         {/* ACCIONES DE USUARIO / INGRESO */}
+//         <div className="flex items-center gap-4">
+//           {user ? (
+//             <div className="flex items-center gap-3">
+//               <span className="text-sm font-medium text-gray-700">
+//                 {user.nombre} {user.apellido || ''}
+//               </span>
+//               <button
+//                 onClick={handleLogout}
+//                 className="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+//               >
+//                 Cerrar Sesión
+//               </button>
+//             </div>
+//           ) : (
+//             <Link
+//               to="/login"
+//               className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors"
+//             >
+//               Ingresar
+//             </Link>
+//           )}
+//         </div>
+//       </div>
+//     </header>
+//   );
+// }
+
+// import { Link, useNavigate } from 'react-router-dom';
+// import { useAuthStore } from '../../store/authStore';
+
+// export default function Navbar() {
+//   const { user, logout } = useAuthStore();
+//   const navigate = useNavigate();
+
+//   const handleLogout = () => {
+//     logout();
+//     navigate('/login');
+//   };
+
+//   return (
+//     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
+//       <div className="w-full px-4 sm:px-8 h-16 flex items-center justify-between">
+//         {/* LOGO + NOMBRE */}
+//         <div className="flex items-center gap-8">
+//           <Link to="/" className="flex items-center gap-2">
+//             <div className="bg-amber-500 text-white font-bold p-2 rounded-lg text-sm">
+//               TR
+//             </div>
+//             <span className="font-bold text-gray-900 text-lg">
+//               Transfers App
+//             </span>
+//           </Link>
+
+//           {/* ENLACES DE NAVEGACIÓN HORIZONTAL */}
+//           <nav className="hidden md:flex items-center gap-6">
+//             <Link
+//               to="/viajes"
+//               className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+//             >
+//               Viajes
+//             </Link>
+//             <Link
+//               to="/reservas"
+//               className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+//             >
+//               Reservas
+//             </Link>
+//             {user?.rol === 'ADMIN' && (
+//               <>
+//                 <Link
+//                   to="/puntos"
+//                   className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+//                 >
+//                   Puntos
+//                 </Link>
+//                 <Link
+//                   to="/usuarios"
+//                   className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
+//                 >
+//                   Usuarios
+//                 </Link>
+//               </>
+//             )}
+//           </nav>
+//         </div>
+
+//         {/* ÁREA DE USUARIO Y ACCIONES */}
+//         <div className="flex items-center gap-4">
+//           {user ? (
+//             <div className="flex items-center gap-3">
+//               <span className="text-sm font-medium text-gray-700">
+//                 {user.nombre} {user.apellido}
+//               </span>
+//               <button
+//                 onClick={handleLogout}
+//                 className="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+//               >
+//                 Cerrar Sesión
+//               </button>
+//             </div>
+//           ) : (
+//             <Link
+//               to="/login"
+//               className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors"
+//             >
+//               Ingresar
+//             </Link>
+//           )}
+//         </div>
+//       </div>
+//     </header>
+//   );
+// }
 
 // import { useNavigate, Link } from 'react-router-dom';
 // import {
