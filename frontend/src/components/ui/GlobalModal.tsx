@@ -3,10 +3,13 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useModalStore } from '../../store/useModalStore';
-
+// 1. Importa el ViajeForm arriba
+import { ViajeForm } from '../../features/viajes/components/ViajeForm';
+// Asegúrate de tener esto arriba en los imports de GlobalModal.tsx:
+import type { Viaje, Ruta, Usuario } from '../../types';
 import { ViajeDetalleContent } from '../../features/viajes/components/ViajeDetalleContent';
 import { DetalleViajePublicoContent } from '../../features/viajes/components/DetalleViajePublicoContent';
-import type { Viaje } from '../../types';
+
 
 export const GlobalModal = () => {
   const { isOpen, type, title, data, content, closeModal } = useModalStore();
@@ -45,6 +48,81 @@ export const GlobalModal = () => {
             onReservar={data.onReservar as ((viaje: Viaje) => void) | undefined}
           />
         ) : null;
+      case 'CREAR_VIAJE':
+        return (
+          <div className="p-6 overflow-y-auto max-h-[80vh]">
+            <ViajeForm
+              idEditando={null}
+              viajeAEditar={null}
+              rutasDisponibles={(data?.rutasDisponibles as Ruta[]) || []}
+              choferesDisponibles={
+                (data?.choferesDisponibles as Usuario[]) || []
+              }
+              onSuccess={async () => {
+                if (data?.onSuccess && typeof data.onSuccess === 'function') {
+                  await data.onSuccess();
+                }
+                closeModal();
+              }}
+              onCancelar={closeModal}
+            />
+          </div>
+        );
+
+      case 'EDITAR_VIAJE':
+        return data?.viaje ? (
+          <div className="p-6 overflow-y-auto max-h-[80vh]">
+            <ViajeForm
+              idEditando={data.viaje.id ? String(data.viaje.id) : null}
+              viajeAEditar={data.viaje}
+              rutasDisponibles={(data?.rutasDisponibles as Ruta[]) || []}
+              choferesDisponibles={
+                (data?.choferesDisponibles as Usuario[]) || []
+              }
+              onSuccess={async () => {
+                if (data?.onSuccess && typeof data.onSuccess === 'function') {
+                  await data.onSuccess();
+                }
+                closeModal();
+              }}
+              onCancelar={closeModal}
+            />
+          </div>
+        ) : null;
+
+      case 'CONFIRMAR_ELIMINAR':
+        return (
+          <div className="p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">
+              Confirmar Acción
+            </h3>
+            <p className="text-slate-600 mb-6">
+              {data?.mensaje ||
+                '¿Estás seguro de que deseas eliminar este elemento?'}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-medium transition-colors"
+              >
+                Volver
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (data?.onConfirm && typeof data.onConfirm === 'function') {
+                    await data.onConfirm();
+                  }
+                  closeModal();
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Sí, eliminar
+              </button>
+            </div>
+          </div>
+        );
 
       default:
         return (

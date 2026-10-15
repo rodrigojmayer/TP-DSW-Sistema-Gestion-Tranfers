@@ -1,4 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
+//import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react'; // 👈 Añadido useCallback
+
 import { useForm, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { crearReservaSchema, type ReservaFormData } from '../schemas/reservaSchema';
@@ -25,7 +27,9 @@ const formatToDatetimeLocal = (dateStr?: string | Date) => {
 export const ReservasPage = () => {
   const user = useAuthStore((state) => state.user);
   const [reservas, setReservas] = useState<Reserva[]>([]);
-  const [todasLasReservasViaje, setTodasLasReservasViaje] = useState<Reserva[]>([]);
+  const [todasLasReservasViaje, setTodasLasReservasViaje] = useState<Reserva[]>(
+    [],
+  );
   const [viajes, setViajes] = useState<Viaje[]>([]);
   const [clientes, setClientes] = useState<Usuario[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -69,7 +73,7 @@ export const ReservasPage = () => {
   const tipoViaje = useWatch({ control, name: 'tipoViaje' });
   const idViajeSeleccionado = useWatch({ control, name: 'idViaje' });
   const origenSeleccionado = useWatch({ control, name: 'origen' });
-  const destinoSeleccionado = useWatch({ control, name: 'destino'});
+  const destinoSeleccionado = useWatch({ control, name: 'destino' });
   const asientoIngresado = useWatch({ control, name: 'asiento' }) || 1;
   const valijasIngresadas = useWatch({ control, name: 'cantValijas' }) || 0;
   const [coordsOrigen, setCoordsOrigen] = useState<Coordenada | null>(null);
@@ -85,24 +89,25 @@ export const ReservasPage = () => {
 
   const viajesCompartidosDisponibles = useMemo(() => {
     if (!viajes || !Array.isArray(viajes)) return [];
-    
+
     return viajes.filter((viaje) => viaje.tipo === 'COMPARTIDO');
   }, [viajes]);
 
   // 2. Extraer y normalizar todas las paradas en un arreglo de strings
   const listaParadas = useMemo(() => {
-
     if (!viajeSeleccionado || !viajeSeleccionado.idRuta) return [];
 
     // 1. Buscamos el arreglo de punto_ruta dentro del viaje o dentro de la ruta
-    const rutaEncontrada = rutas.find((r) => r.idRuta === viajeSeleccionado.idRuta);
+    const rutaEncontrada = rutas.find(
+      (r) => r.idRuta === viajeSeleccionado.idRuta,
+    );
 
     if (!rutaEncontrada) return [];
 
     const puntosRuta = rutaEncontrada.puntos || [];
 
     if (!Array.isArray(puntosRuta) || puntosRuta.length === 0) return [];
-    
+
     // 2. Ordenamos por la columna 'orden' que tenés en la base de datos
     const paradasOrdenadas = [...puntosRuta].sort((a, b) => {
       const ordenA = a.orden ?? 0;
@@ -116,8 +121,10 @@ export const ReservasPage = () => {
         // Si viene plano en el objeto (como muestra tu consola) o dentro de 'punto'
         return item.nombre || item.punto?.nombre || '';
       })
-      .filter((nombre): nombre is string => Boolean(nombre) && nombre.trim() !== '');
-  }, [viajeSeleccionado]);
+      .filter(
+        (nombre): nombre is string => Boolean(nombre) && nombre.trim() !== '',
+      );
+  }, [viajeSeleccionado, rutas]);
 
   // 3. Orígenes disponibles: Todas las paradas menos la ÚLTIMA
   const origenesDisponibles = useMemo(() => {
@@ -127,7 +134,11 @@ export const ReservasPage = () => {
 
   // 4. Destinos disponibles: Solo las paradas POSTERIORES a la parada de Origen seleccionada
   const destinosDisponibles = useMemo(() => {
-    if (tipoViaje !== 'COMPARTIDO' || !origenSeleccionado || listaParadas.length === 0) {
+    if (
+      tipoViaje !== 'COMPARTIDO' ||
+      !origenSeleccionado ||
+      listaParadas.length === 0
+    ) {
       return [];
     }
     const idxOrigen = listaParadas.indexOf(origenSeleccionado);
@@ -189,7 +200,6 @@ export const ReservasPage = () => {
   }, [idViajeSeleccionado, tipoViaje, setValue]);
 
   useEffect(() => {
-
     // Calculamos la equivalencia de ocupación (cada valija es el 50% de un pasajero)
     const pasajerosEquivalentes = asientoIngresado + valijasIngresadas * 0.5;
 
@@ -227,7 +237,7 @@ export const ReservasPage = () => {
 
     if (idxOrigen !== -1 && idxDestino !== -1 && idxDestino > idxOrigen) {
       const totalTramosViaje = listaParadas.length - 1; // Ej: 5 paradas = 4 tramos
-      const tramosRecorridos = idxDestino - idxOrigen;  // Ej: A (0) -> C (2) = 2 tramos
+      const tramosRecorridos = idxDestino - idxOrigen; // Ej: A (0) -> C (2) = 2 tramos
 
       const precioPorTramo = precioBase / totalTramosViaje;
       const precioCalculado =
@@ -256,7 +266,23 @@ export const ReservasPage = () => {
     }
   }, [origenSeleccionado, tipoViaje, setValue]);
 
-  const obtenerViajesSegunRol = async (): Promise<Viaje[]> => {
+  // const obtenerViajesSegunRol = async (): Promise<Viaje[]> => {
+  //   try {
+  //     if (user?.rol === 'ADMIN') {
+  //       return await viajeService.obtenerTodosAdmin();
+  //     }
+  //     if (user?.rol === 'CLIENTE') {
+  //       return await viajeService.obtenerMisViajes();
+  //     }
+  //     return await viajeService.obtenerPublicos();
+  //   } catch (error) {
+  //     console.error('Error al obtener viajes:', error);
+  //     return [];
+  //   }
+  // };
+
+  // 👈 AQUÍ: La envolvemos en useCallback
+  const obtenerViajesSegunRol = useCallback(async (): Promise<Viaje[]> => {
     try {
       if (user?.rol === 'ADMIN') {
         return await viajeService.obtenerTodosAdmin();
@@ -269,16 +295,16 @@ export const ReservasPage = () => {
       console.error('Error al obtener viajes:', error);
       return [];
     }
-  };
+  }, [user]); // 👈 Dependencia estricta del rol
 
   const obtenerReservasSegunRol = async (): Promise<Reserva[]> => {
     if (!estaLogueado || !user?.id) return [];
-    
+
     if (user.rol === 'ADMIN') {
       return await reservaService.obtenerTodas().catch(() => []);
     }
-    
-    // Al usar user.id después de la verificación !user?.id, 
+
+    // Al usar user.id después de la verificación !user?.id,
     // TypeScript reconoce que id es de tipo string
     return await reservaService.obtenerPorCliente(user.id).catch(() => []);
   };
@@ -292,12 +318,14 @@ export const ReservasPage = () => {
       setReservas(resData);
       setViajes(
         viajesData.filter(
-          (v) => !v.estado || v.estado.toUpperCase() === 'PROGRAMADO'
-        )
+          (v) => !v.estado || v.estado.toUpperCase() === 'PROGRAMADO',
+        ),
       );
 
       if (user?.rol === 'ADMIN') {
-        const usuariosData = await usuarioService.obtenerTodos().catch(() => []);
+        const usuariosData = await usuarioService
+          .obtenerTodos()
+          .catch(() => []);
         setClientes(usuariosData.filter((u) => u.rol === 'CLIENTE'));
       }
     } catch (error) {
@@ -306,7 +334,6 @@ export const ReservasPage = () => {
       setCargando(false);
     }
   };
-
 
   // Calculamos el límite máximo disponible según el origen y destino seleccionados
   const calcularLimiteAsientos = () => {
@@ -339,11 +366,12 @@ export const ReservasPage = () => {
     // });
     // ✅ AHORA (usa 'todasLasReservasViaje'):
     const reservasActivas = todasLasReservasViaje.filter((r) => {
-      const idViajeReserva = typeof r.viaje === 'object' && r.viaje !== null ? r.viaje.id : r.viaje;
+      const idViajeReserva =
+        typeof r.viaje === 'object' && r.viaje !== null ? r.viaje.id : r.viaje;
       const esMismaReserva = modoEdicion && r.id === idEdicion;
       return idViajeReserva === viajeSeleccionado.id && !esMismaReserva;
     });
-    
+
     // 3. Para cada tramo de la ruta, sumar pasajeros ocupados por reservas que se solapan
     let maxPasajerosPermitidos = capacidadTotal;
 
@@ -393,15 +421,16 @@ export const ReservasPage = () => {
       });
     }
 
-  //   // 2. Filtrar reservas activas (excluyendo la reserva en edición)
-  //   reservaService.obtenerPorViaje(idViajeSeleccionado)
-  // .then((data) => setTodasLasReservasViaje(data));
+    //   // 2. Filtrar reservas activas (excluyendo la reserva en edición)
+    //   reservaService.obtenerPorViaje(idViajeSeleccionado)
+    // .then((data) => setTodasLasReservasViaje(data));
 
-  const reservasActivas = todasLasReservasViaje.filter((r) => {
-    const idViajeReserva = typeof r.viaje === 'object' && r.viaje !== null ? r.viaje.id : r.viaje;
-    const esMismaReserva = modoEdicion && r.id === idEdicion;
-    return idViajeReserva === viajeSeleccionado.id && !esMismaReserva;
-  });
+    const reservasActivas = todasLasReservasViaje.filter((r) => {
+      const idViajeReserva =
+        typeof r.viaje === 'object' && r.viaje !== null ? r.viaje.id : r.viaje;
+      const esMismaReserva = modoEdicion && r.id === idEdicion;
+      return idViajeReserva === viajeSeleccionado.id && !esMismaReserva;
+    });
 
     // 3. Sumar valijas ocupadas por tramo
     let maxValijasPermitidas = capacidadTotalValijas;
@@ -431,8 +460,7 @@ export const ReservasPage = () => {
 
   const limitePasajeros = tipoViaje === 'PRIVADO' ? 4 : maxAsientosDisponibles;
   const limiteValijas = tipoViaje === 'PRIVADO' ? 4 : maxValijasDisponibles;
-  
-  
+
   useEffect(() => {
     if (asientoIngresado < 1) {
       setValue('asiento', 1);
@@ -453,46 +481,46 @@ export const ReservasPage = () => {
   // Calculamos la fecha activa directamente en el render
   const fechaInicio = useMemo(() => {
     if (tipoViaje === 'COMPARTIDO') {
-      const inicio = viajeSeleccionado?.fechaHoraInicio || viajeSeleccionado?.fechaHora;
+      const inicio =
+        viajeSeleccionado?.fechaHoraInicio || viajeSeleccionado?.fechaHora;
       return formatToDatetimeLocal(inicio);
     }
     return fechaInicioPrivada;
   }, [tipoViaje, viajeSeleccionado, fechaInicioPrivada]);
 
-  const sumarHorasADatetimeLocal = (datetimeStr: string, horasASumar: number): string => {
-  if (!datetimeStr || isNaN(horasASumar) || horasASumar <= 0) return '';
-  const fecha = new Date(datetimeStr);
-  if (isNaN(fecha.getTime())) return '';
+  const sumarHorasADatetimeLocal = (
+    datetimeStr: string,
+    horasASumar: number,
+  ): string => {
+    if (!datetimeStr || isNaN(horasASumar) || horasASumar <= 0) return '';
+    const fecha = new Date(datetimeStr);
+    if (isNaN(fecha.getTime())) return '';
 
-  const fechaFin = new Date(fecha.getTime() + horasASumar * 60 * 60 * 1000);
+    const fechaFin = new Date(fecha.getTime() + horasASumar * 60 * 60 * 1000);
 
-  const pad = (n: number) => (n < 10 ? `0${n}` : n);
-  return `${fechaFin.getFullYear()}-${pad(fechaFin.getMonth() + 1)}-${pad(fechaFin.getDate())}T${pad(fechaFin.getHours())}:${pad(fechaFin.getMinutes())}`;
-};
+    const pad = (n: number) => (n < 10 ? `0${n}` : n);
+    return `${fechaFin.getFullYear()}-${pad(fechaFin.getMonth() + 1)}-${pad(fechaFin.getDate())}T${pad(fechaFin.getHours())}:${pad(fechaFin.getMinutes())}`;
+  };
 
-// 1. Cálculo exclusivo para VIAJE PRIVADO
-const fechaFinPrivadaCalculada = useMemo(() => {
-  // Si no hay fecha de inicio o distancia guardada, no calcula nada
-  if (!fechaInicioPrivada || !distanciaKm || distanciaKm <= 0) return '';
-  
-  const horasEstimadas = distanciaKm / 100;
-  return sumarHorasADatetimeLocal(fechaInicioPrivada, horasEstimadas);
-}, [fechaInicioPrivada, distanciaKm]);
+  // 1. Cálculo exclusivo para VIAJE PRIVADO
+  const fechaFinPrivadaCalculada = useMemo(() => {
+    // Si no hay fecha de inicio o distancia guardada, no calcula nada
+    if (!fechaInicioPrivada || !distanciaKm || distanciaKm <= 0) return '';
 
-// 2. Selección de fecha de fin según el tipo de viaje
-const fechaFin = useMemo(() => {
-  if (tipoViaje === 'COMPARTIDO') {
-    // Para viaje COMPARTIDO: Lee directamente la fecha fin propia del Viaje
-    return formatToDatetimeLocal(viajeSeleccionado?.fechaHoraFin);
-  }
-  
-  // Para viaje PRIVADO: Usa el valor calculado a partir de la distancia y velocidad
-  return fechaFinPrivadaCalculada;
-}, [tipoViaje, viajeSeleccionado, fechaFinPrivadaCalculada]);
+    const horasEstimadas = distanciaKm / 100;
+    return sumarHorasADatetimeLocal(fechaInicioPrivada, horasEstimadas);
+  }, [fechaInicioPrivada, distanciaKm]);
 
+  // 2. Selección de fecha de fin según el tipo de viaje
+  const fechaFin = useMemo(() => {
+    if (tipoViaje === 'COMPARTIDO') {
+      // Para viaje COMPARTIDO: Lee directamente la fecha fin propia del Viaje
+      return formatToDatetimeLocal(viajeSeleccionado?.fechaHoraFin);
+    }
 
-
-
+    // Para viaje PRIVADO: Usa el valor calculado a partir de la distancia y velocidad
+    return fechaFinPrivadaCalculada;
+  }, [tipoViaje, viajeSeleccionado, fechaFinPrivadaCalculada]);
 
   useEffect(() => {
     let isMounted = true;
@@ -540,7 +568,7 @@ const fechaFin = useMemo(() => {
     return () => {
       isMounted = false;
     };
-  }, [user, estaLogueado]);
+  }, [user, estaLogueado,obtenerViajesSegunRol]);
 
   // useEffect(() => {
   //   if (asientoIngresado < 1) {
@@ -568,7 +596,9 @@ const fechaFin = useMemo(() => {
   };
 
   const handleClienteSelect = (idCliente: string) => {
-    const cliente = clientes.find((c) => c.id === idCliente || c.idUsuario === idCliente);
+    const cliente = clientes.find(
+      (c) => c.id === idCliente || c.idUsuario === idCliente,
+    );
     if (cliente) {
       setValue('pasajeroNombre', cliente.nombre ? cliente.nombre : '');
       setValue('pasajeroApellido', cliente.apellido);
@@ -607,17 +637,25 @@ const fechaFin = useMemo(() => {
         cantValijas: reserva.cantValijas || 0,
         precioFinal: reserva.precio || 0,
         pasajeroNombre:
-          typeof reserva.usuario === 'object' ? reserva.usuario?.nombre || '' : '',
+          typeof reserva.usuario === 'object'
+            ? reserva.usuario?.nombre || ''
+            : '',
         pasajeroApellido:
-          typeof reserva.usuario === 'object' ? reserva.usuario?.apellido || '' : '',
+          typeof reserva.usuario === 'object'
+            ? reserva.usuario?.apellido || ''
+            : '',
         pasajeroDni:
           typeof reserva.usuario === 'object' ? reserva.usuario?.dni || '' : '',
         pasajeroEmail:
-          typeof reserva.usuario === 'object' ? reserva.usuario?.email || '' : '',
+          typeof reserva.usuario === 'object'
+            ? reserva.usuario?.email || ''
+            : '',
         pasajeroTelefono:
-          typeof reserva.usuario === 'object' ? reserva.usuario?.telefono || '' : '',
+          typeof reserva.usuario === 'object'
+            ? reserva.usuario?.telefono || ''
+            : '',
       });
-      } else {
+    } else {
       reset({
         tipoReserva: 'INVITADO',
         tipoViaje:
@@ -632,15 +670,23 @@ const fechaFin = useMemo(() => {
         cantValijas: reserva.cantValijas || 0,
         precioFinal: reserva.precio || 0,
         pasajeroNombre:
-          typeof reserva.usuario === 'object' ? reserva.usuario?.nombre || '' : '',
+          typeof reserva.usuario === 'object'
+            ? reserva.usuario?.nombre || ''
+            : '',
         pasajeroApellido:
-          typeof reserva.usuario === 'object' ? reserva.usuario?.apellido || '' : '',
+          typeof reserva.usuario === 'object'
+            ? reserva.usuario?.apellido || ''
+            : '',
         pasajeroDni:
           typeof reserva.usuario === 'object' ? reserva.usuario?.dni || '' : '',
         pasajeroEmail:
-          typeof reserva.usuario === 'object' ? reserva.usuario?.email || '' : '',
+          typeof reserva.usuario === 'object'
+            ? reserva.usuario?.email || ''
+            : '',
         pasajeroTelefono:
-          typeof reserva.usuario === 'object' ? reserva.usuario?.telefono || '' : '',
+          typeof reserva.usuario === 'object'
+            ? reserva.usuario?.telefono || ''
+            : '',
       });
     }
   };
@@ -690,16 +736,15 @@ const fechaFin = useMemo(() => {
 
   const onSubmit = async (data: ReservaFormData) => {
     try {
-      
       const cantPasajerosSolicitados = Number(data.asiento) || 1;
       const cantValijasSolicitadas = Number(data.cantValijas) || 0;
-      
-
 
       // 1. SI EL VIAJE ES PRIVADO
       if (tipoViaje === 'PRIVADO') {
         if (!data.origen || !data.destino) {
-          alert('Por favor ingrese el origen y destino exactos para el viaje privado.');
+          alert(
+            'Por favor ingrese el origen y destino exactos para el viaje privado.',
+          );
           return;
         }
 
@@ -708,7 +753,7 @@ const fechaFin = useMemo(() => {
           pasajeroApellido: data.pasajeroApellido,
           pasajeroDni: data.pasajeroDni,
           // 💡 Si data.pasajeroEmail viene como undefined, usará ''
-          pasajeroEmail: data.pasajeroEmail || '', 
+          pasajeroEmail: data.pasajeroEmail || '',
           pasajeroTelefono: data.pasajeroTelefono || '',
           origen: {
             nombre: data.origen,
@@ -740,37 +785,32 @@ const fechaFin = useMemo(() => {
         return;
       }
 
-
-
       // Validar el límite calculado para el tramo
       if (cantPasajerosSolicitados > maxAsientosDisponibles) {
         alert(
-          `No es posible realizar la reserva. El límite de asientos disponibles para este tramo es ${maxAsientosDisponibles}.`
+          `No es posible realizar la reserva. El límite de asientos disponibles para este tramo es ${maxAsientosDisponibles}.`,
         );
         return;
       }
       if (cantValijasSolicitadas > maxValijasDisponibles) {
         alert(
-          `No es posible realizar la reserva. El límite de valijas permitidas para este tramo es ${maxValijasDisponibles}.`
+          `No es posible realizar la reserva. El límite de valijas permitidas para este tramo es ${maxValijasDisponibles}.`,
         );
         return;
       }
-    
+
       const idClienteValido =
-        data.tipoReserva === 'LOGUEADO'
-          ? data.idCliente || user?.id || ''
-          : '';
+        data.tipoReserva === 'LOGUEADO' ? data.idCliente || user?.id || '' : '';
 
       const payload = {
         ...data,
         idCliente: idClienteValido,
         precio: data.precioFinal,
-        origen: data.origen,  
+        origen: data.origen,
         destino: data.destino,
         cantPasajeros: cantPasajerosSolicitados,
         cantValijas: cantValijasSolicitadas,
       };
-
 
       if (modoEdicion && idEdicion) {
         await reservaService.actualizar(idEdicion, payload);
@@ -782,7 +822,9 @@ const fechaFin = useMemo(() => {
 
       await refrescarDatos();
       if (idViajeSeleccionado) {
-        const data = await reservaService.obtenerPorViaje(idViajeSeleccionado).catch(() => []);
+        const data = await reservaService
+          .obtenerPorViaje(idViajeSeleccionado)
+          .catch(() => []);
         setTodasLasReservasViaje(data);
       }
     } catch (error: unknown) {
@@ -831,10 +873,13 @@ const fechaFin = useMemo(() => {
           </span>
         </div>
 
-        <form 
+        <form
           onSubmit={handleSubmit(onSubmit, (validationErrors) => {
-            console.warn('Errores de validación en el formulario:', validationErrors);
-          })} 
+            console.warn(
+              'Errores de validación en el formulario:',
+              validationErrors,
+            );
+          })}
           className="space-y-4"
         >
           {/* Seleccionar Tipo de Viaje */}
@@ -846,11 +891,15 @@ const fechaFin = useMemo(() => {
               {...register('tipoViaje')}
               className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none"
             >
-              <option value="COMPARTIDO">Compartido (Paradas predefinidas)</option>
+              <option value="COMPARTIDO">
+                Compartido (Paradas predefinidas)
+              </option>
               <option value="PRIVADO">Privado (Dirección exacta)</option>
             </select>
             {errors.tipoViaje && (
-              <span className="text-xs text-red-500">{errors.tipoViaje.message}</span>
+              <span className="text-xs text-red-500">
+                {errors.tipoViaje.message}
+              </span>
             )}
           </div>
 
@@ -913,47 +962,71 @@ const fechaFin = useMemo(() => {
               {distanciaKm !== null && (
                 <div className="p-2 bg-amber-50 border border-amber-200 rounded-md text-xs font-semibold text-amber-800 flex justify-between items-center">
                   <span>Distancia estimada del trayecto:</span>
-                  <span className="text-sm font-bold text-amber-900">{distanciaKm} km</span>
+                  <span className="text-sm font-bold text-amber-900">
+                    {distanciaKm} km
+                  </span>
                 </div>
               )}
-
-           
             </div>
           ) : (
             /* VISTA PARA VIAJE COMPARTIDO */
             <div className="grid grid-cols-1 gap-3">
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-slate-700">Origen (Punto de subida)</label>
-                <select 
-                  {...register('origen')} 
-                  disabled={!idViajeSeleccionado || origenesDisponibles.length === 0}
+                <label className="text-sm font-medium text-slate-700">
+                  Origen (Punto de subida)
+                </label>
+                <select
+                  {...register('origen')}
+                  disabled={
+                    !idViajeSeleccionado || origenesDisponibles.length === 0
+                  }
                   className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none disabled:bg-slate-100"
                 >
                   <option value="">
-                    {!idViajeSeleccionado ? 'Seleccione un viaje primero' : '-- Seleccione Parada Origen --'}
+                    {!idViajeSeleccionado
+                      ? 'Seleccione un viaje primero'
+                      : '-- Seleccione Parada Origen --'}
                   </option>
                   {origenesDisponibles.map((p, idx) => (
-                    <option key={idx} value={p}>{p}</option>
+                    <option key={idx} value={p}>
+                      {p}
+                    </option>
                   ))}
                 </select>
-                {errors.origen && <span className="text-xs text-red-500">{errors.origen.message}</span>}
+                {errors.origen && (
+                  <span className="text-xs text-red-500">
+                    {errors.origen.message}
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-slate-700">Destino (Punto de bajada)</label>
-                <select 
-                  {...register('destino')} 
-                  disabled={!origenSeleccionado || destinosDisponibles.length === 0}
+                <label className="text-sm font-medium text-slate-700">
+                  Destino (Punto de bajada)
+                </label>
+                <select
+                  {...register('destino')}
+                  disabled={
+                    !origenSeleccionado || destinosDisponibles.length === 0
+                  }
                   className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none disabled:bg-slate-100"
                 >
                   <option value="">
-                    {!origenSeleccionado ? 'Seleccione un origen primero' : '-- Seleccione Parada Destino --'}
+                    {!origenSeleccionado
+                      ? 'Seleccione un origen primero'
+                      : '-- Seleccione Parada Destino --'}
                   </option>
                   {destinosDisponibles.map((p, idx) => (
-                    <option key={idx} value={p}>{p}</option>
+                    <option key={idx} value={p}>
+                      {p}
+                    </option>
                   ))}
                 </select>
-                {errors.destino && <span className="text-xs text-red-500">{errors.destino.message}</span>}
+                {errors.destino && (
+                  <span className="text-xs text-red-500">
+                    {errors.destino.message}
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -973,7 +1046,10 @@ const fechaFin = useMemo(() => {
                 >
                   <option value="">Seleccione un cliente registrado...</option>
                   {clientes.map((c, indx) => (
-                    <option key={c.id || c.idUsuario || indx} value={c.id || c.idUsuario}>
+                    <option
+                      key={c.id || c.idUsuario || indx}
+                      value={c.id || c.idUsuario}
+                    >
                       {c.nombre} {c.apellido} ({c.email})
                     </option>
                   ))}
@@ -983,38 +1059,37 @@ const fechaFin = useMemo(() => {
                     {errors.idCliente.message}
                   </span>
                 )}
-   
               </div>
             </div>
           )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-  {/* Fecha Inicio */}
-  <div className="flex flex-col gap-1">
-    <label className="text-sm font-medium text-slate-700">
-      Fecha y Hora de Inicio
-    </label>
-    <input
-      type="datetime-local"
-      value={fechaInicio}
-      disabled={tipoViaje === 'COMPARTIDO'}
-      onChange={(e) => setFechaInicioPrivada(e.target.value)}
-      className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none disabled:bg-slate-100 disabled:text-slate-500"
-    />
-  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Fecha Inicio */}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-slate-700">
+                Fecha y Hora de Inicio
+              </label>
+              <input
+                type="datetime-local"
+                value={fechaInicio}
+                disabled={tipoViaje === 'COMPARTIDO'}
+                onChange={(e) => setFechaInicioPrivada(e.target.value)}
+                className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none disabled:bg-slate-100 disabled:text-slate-500"
+              />
+            </div>
 
-  {/* Fecha Fin */}
-  <div className="flex flex-col gap-1">
-    <label className="text-sm font-medium text-slate-700">
-      Fecha y Hora de Fin {tipoViaje === 'PRIVADO' && '(Estimada)'}
-    </label>
-    <input
-      type="datetime-local"
-      value={fechaFin}
-      disabled={true} // Siempre deshabilitado
-      className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-slate-100 text-slate-600 outline-none cursor-not-allowed"
-    />
-  </div>
-</div>
+            {/* Fecha Fin */}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-slate-700">
+                Fecha y Hora de Fin {tipoViaje === 'PRIVADO' && '(Estimada)'}
+              </label>
+              <input
+                type="datetime-local"
+                value={fechaFin}
+                disabled={true} // Siempre deshabilitado
+                className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-slate-100 text-slate-600 outline-none cursor-not-allowed"
+              />
+            </div>
+          </div>
           {/* DATOS DEL PASAJERO */}
           <div className="space-y-3 border-t pt-3">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -1075,7 +1150,8 @@ const fechaFin = useMemo(() => {
                 {...register('asiento', { valueAsNumber: true })}
                 onInput={(e) => {
                   const el = e.currentTarget;
-                  if (Number(el.value) > limitePasajeros) el.value = String(limitePasajeros);
+                  if (Number(el.value) > limitePasajeros)
+                    el.value = String(limitePasajeros);
                   if (Number(el.value) < 1 && el.value !== '') el.value = '1';
                 }}
                 className="w-full h-10 px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none"
@@ -1104,7 +1180,8 @@ const fechaFin = useMemo(() => {
                 {...register('cantValijas', { valueAsNumber: true })}
                 onInput={(e) => {
                   const el = e.currentTarget;
-                  if (Number(el.value) > limiteValijas) el.value = String(limiteValijas);
+                  if (Number(el.value) > limiteValijas)
+                    el.value = String(limiteValijas);
                   if (Number(el.value) < 0 && el.value !== '') el.value = '0';
                 }}
                 className="w-full h-10 px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none"
@@ -1175,11 +1252,17 @@ const fechaFin = useMemo(() => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {reservas.map((r) => {
-                  const usuarioObj = typeof r.usuario === 'object' ? r.usuario : null;
+                  const usuarioObj =
+                    typeof r.usuario === 'object' ? r.usuario : null;
                   return (
-                    <tr key={r.id} className="hover:bg-slate-50 transition-colors">
+                    <tr
+                      key={r.id}
+                      className="hover:bg-slate-50 transition-colors"
+                    >
                       <td className="py-3 px-4 font-medium text-slate-900">
-                        {usuarioObj ? `${usuarioObj.nombre} ${usuarioObj.apellido}` : 'Invitado Express'}
+                        {usuarioObj
+                          ? `${usuarioObj.nombre} ${usuarioObj.apellido}`
+                          : 'Invitado Express'}
                         <span className="block text-xs text-slate-400">
                           DNI: {usuarioObj?.dni || 'N/A'}
                         </span>

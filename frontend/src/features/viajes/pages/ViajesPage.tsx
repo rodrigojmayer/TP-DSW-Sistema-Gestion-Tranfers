@@ -9,11 +9,15 @@ import {
   Filter,
   Car,
 } from 'lucide-react';
-import type { Viaje } from '../../../types';
+import type { Usuario, Viaje } from '../../../types';
 import { useModalStore } from '../../../store/useModalStore';
 import { useAuthStore } from '../../../store/authStore';
 import { viajeService } from '../api/viajeService';
 import { ViajesTabla } from '../components/ViajesTabla';
+
+// nuevas importaciones para el modal esitar admin
+import { rutaService } from '../../rutas/api/rutaService';
+import { usuarioService } from '../../usuarios/api/usuarioService';
 
 export function ViajesPage() {
   const [viajes, setViajes] = useState<Viaje[]>([]);
@@ -108,28 +112,83 @@ export function ViajesPage() {
     return viajesFiltrados.filter((v) => v.tipo?.toUpperCase() === 'PRIVADO');
   }, [viajesFiltrados]);
 
-  const handleCrear = () => {
+  // const handleCrear = () => {
+  //   openModal('CREAR_VIAJE', {
+  //     data: {
+  //       onSuccess: async () => {
+  //         const data = await cargarSegunRol();
+  //         setViajes(data);
+  //       },
+  //     },
+  //   });
+  // };
+
+  // const handleEditar = (viaje: Viaje) => {
+  //   openModal('EDITAR_VIAJE', {
+  //     data: {
+  //       viaje,
+  //       onSuccess: async () => {
+  //         const data = await cargarSegunRol();
+  //         setViajes(data);
+  //       },
+  //     },
+  //   });
+  // };
+const handleCrear = async () => {
+  try {
+    const [rutas, usuarios] = await Promise.all([
+      rutaService.obtenerTodas().catch(() => []),
+      usuarioService.obtenerTodos().catch(() => []),
+    ]);
+
+    // Filtramos solo los usuarios que son choferes
+    const choferes = usuarios.filter((u: Usuario) => u.rol === 'CHOFER');
+
     openModal('CREAR_VIAJE', {
+      title: 'Programar Nuevo Viaje',
       data: {
+        rutasDisponibles: rutas,
+        choferesDisponibles: choferes,
         onSuccess: async () => {
           const data = await cargarSegunRol();
           setViajes(data);
         },
       },
     });
-  };
+  } catch (err) {
+    console.error('Error al cargar datos para el formulario', err);
+  }
+};
 
-  const handleEditar = (viaje: Viaje) => {
+const handleEditar = async (viaje: Viaje) => {
+  try {
+    const [rutas, usuarios] = await Promise.all([
+      rutaService.obtenerTodas().catch(() => []),
+      usuarioService.obtenerTodos().catch(() => []),
+    ]);
+
+    // Filtramos solo los usuarios que son choferes
+    const choferes = usuarios.filter((u:Usuario) => u.rol === 'CHOFER');
+
     openModal('EDITAR_VIAJE', {
+      title: 'Editar Viaje',
       data: {
         viaje,
+        rutasDisponibles: rutas,
+        choferesDisponibles: choferes,
         onSuccess: async () => {
           const data = await cargarSegunRol();
           setViajes(data);
         },
       },
     });
-  };
+  } catch (err) {
+    console.error('Error al cargar datos para editar el viaje', err);
+  }
+};
+
+
+
 
   const handleEliminar = (id: string) => {
     openModal('CONFIRMAR_ELIMINAR', {
