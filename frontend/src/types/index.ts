@@ -183,6 +183,7 @@ export interface Viaje {
   id: string;
   idRuta?: string;
   idChofer?: string;
+ 
   fechaHoraInicio: string;
   fechaHoraFin?: string;
   precio: number;

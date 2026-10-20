@@ -49,14 +49,47 @@ const mapBackendToFrontend = (
     idRuta = raw.ruta;
   }
 
-  // Fallbacks directos si la raíz trae propiedades planas
-  if (raw.origen) origenMapeado = raw.origen;
-  if (raw.destino) destinoMapeado = raw.destino;
-  if (raw.paradas) paradasMapeadas = raw.paradas;
+  //   // Fallbacks directos si la raíz trae propiedades planas
+  //   if (raw.origen) origenMapeado = raw.origen;
+  //   if (raw.destino) destinoMapeado = raw.destino;
+  //   if (raw.paradas) paradasMapeadas = raw.paradas;
 
+  //   let idChofer = '';
+  //   if (raw.chofer && typeof raw.chofer === 'object') {
+  //     idChofer = raw.chofer.id;
+  //   } else if (typeof raw.chofer === 'string') {
+  //     idChofer = raw.chofer;
+  //   } else if (raw.idChofer) {
+  //     idChofer = raw.idChofer;
+  //   }
+
+  //   return {
+  //     id: raw.id,
+  //     tipo: raw.tipo || (raw as any).tipoViaje || 'COMPARTIDO',
+  //     idRuta: idRuta,
+  //     idChofer: idChofer,
+  //     fechaHoraInicio: raw.fechaHoraInicio,
+  //     fechaHoraFin: raw.fechaHoraFin || '',
+  //     precio: raw.precioBase,
+  //     estado: 'PROGRAMADO',
+  //     capacidadPasajeros: raw.capacidadPasajeros,
+  //     capacidadValijas: raw.capacidadValijas,
+  //     rutaNombre: rutaNombre || (raw as any).rutaNombre,
+  //     origen: origenMapeado,
+  //     destino: destinoMapeado,
+  //     paradas: paradasMapeadas,
+  //   };
+  // };
+
+  // 🟢 Corrección para el Chofer (soporta id, idUsuario y extrae su nombre)
   let idChofer = '';
+ // let choferNombre = '';
+
   if (raw.chofer && typeof raw.chofer === 'object') {
-    idChofer = raw.chofer.id;
+    idChofer = (raw.chofer as any).id || (raw.chofer as any).idUsuario || '';
+    //const nombre = (raw.chofer as any).nombre || '';
+    //const apellido = (raw.chofer as any).apellido || '';
+    //choferNombre = `${nombre} ${apellido}`.trim();
   } else if (typeof raw.chofer === 'string') {
     idChofer = raw.chofer;
   } else if (raw.idChofer) {
@@ -68,6 +101,8 @@ const mapBackendToFrontend = (
     tipo: raw.tipo || (raw as any).tipoViaje || 'COMPARTIDO',
     idRuta: idRuta,
     idChofer: idChofer,
+    chofer: raw.chofer, // 👈 AGREGA ESTA LÍNEA PARA PRESERVAR EL OBJETO CHOFER
+    //choferNombre: choferNombre || (raw as any).choferNombre, // 🟢 Aseguramos que viaje el nombre
     fechaHoraInicio: raw.fechaHoraInicio,
     fechaHoraFin: raw.fechaHoraFin || '',
     precio: raw.precioBase,
@@ -107,7 +142,8 @@ export const viajeService = {
     }
 
     const data: ViajeBackend[] = await res.json();
-    return data.map(mapBackendToFrontend);
+    return data.map(mapBackendToFrontend)
+    
   },
 
   obtenerTodosAdmin: async (): Promise<Viaje[]> => {
@@ -140,7 +176,8 @@ export const viajeService = {
 
   crear: async (datos: ViajeFormData): Promise<Viaje> => {
     const payload = {
-      tipo: 'COMPARTIDO',
+      //tipo: 'COMPARTIDO',
+      tipo: datos.tipo || 'COMPARTIDO', // 👈 Respetamos el tipo seleccionado o editado
       fechaHoraInicio: new Date(datos.fechaHoraInicio).toISOString(),
       fechaHoraFin: new Date(datos.fechaHoraFin).toISOString(),
       capacidadPasajeros: datos.capacidadPasajeros,
@@ -167,7 +204,8 @@ export const viajeService = {
 
   actualizar: async (id: string, datos: ViajeFormData): Promise<Viaje> => {
     const payload = {
-      tipo: 'COMPARTIDO',
+      // tipo: 'COMPARTIDO',
+      tipo: datos.tipo || 'COMPARTIDO', // 👈 Igualmente aquí para el PATCH
       fechaHoraInicio: new Date(datos.fechaHoraInicio).toISOString(),
       fechaHoraFin: new Date(datos.fechaHoraFin).toISOString(),
       capacidadPasajeros: datos.capacidadPasajeros,

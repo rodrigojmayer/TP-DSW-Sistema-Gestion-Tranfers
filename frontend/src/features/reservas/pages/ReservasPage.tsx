@@ -8,10 +8,13 @@ import { reservaService } from '../api/reservaService';
 import { viajeService } from '../../viajes/api/viajeService';
 import { usuarioService } from '../../usuarios/api/usuarioService';
 import { useAuthStore } from '../../../store/authStore';
-import type { Reserva, Viaje, Usuario, Ruta, CrearReservaPrivadaFormData } from '../../../types';
+
+// quitamos Ruta de la seccion de abajo
+import type { Reserva, Viaje, Usuario, CrearReservaPrivadaFormData } from '../../../types';
+
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
-import { rutaService } from '../../rutas/api/rutaService';
+//import { rutaService } from '../../rutas/api/rutaService';
 import { InputAutocompleteGeo } from '../../../components/ui/InputAutocompleteGeo';
 import { calcularDistanciaHaversine, type Coordenada } from '../../../services/geoService';
 
@@ -33,7 +36,7 @@ export const ReservasPage = () => {
   const [viajes, setViajes] = useState<Viaje[]>([]);
   const [clientes, setClientes] = useState<Usuario[]>([]);
   const [cargando, setCargando] = useState(true);
-  const [rutas, setRutas] = useState<Ruta[]>([]);
+  // const [rutas, setRutas] = useState<Ruta[]>([]);
 
   const [modoEdicion, setModoEdicion] = useState(false);
   const [idEdicion, setIdEdicion] = useState<string | null>(null);
@@ -93,38 +96,44 @@ export const ReservasPage = () => {
     return viajes.filter((viaje) => viaje.tipo === 'COMPARTIDO');
   }, [viajes]);
 
-  // 2. Extraer y normalizar todas las paradas en un arreglo de strings
+  // // 2. Extraer y normalizar todas las paradas en un arreglo de strings
+  // const listaParadas = useMemo(() => {
+  //   if (!viajeSeleccionado || !viajeSeleccionado.idRuta) return [];
+
+  //   // 1. Buscamos el arreglo de punto_ruta dentro del viaje o dentro de la ruta
+  //   const rutaEncontrada = rutas.find(
+  //     (r) => r.idRuta === viajeSeleccionado.idRuta,
+  //   );
+
+  //   if (!rutaEncontrada) return [];
+
+  //   const puntosRuta = rutaEncontrada.puntos || [];
+
+  //   if (!Array.isArray(puntosRuta) || puntosRuta.length === 0) return [];
+
+  //   // 2. Ordenamos por la columna 'orden' que tenés en la base de datos
+  //   const paradasOrdenadas = [...puntosRuta].sort((a, b) => {
+  //     const ordenA = a.orden ?? 0;
+  //     const ordenB = b.orden ?? 0;
+  //     return ordenA - ordenB;
+  //   });
+
+  //   // 3. Extraemos el nombre desde la relación con la tabla 'punto'
+  //   return paradasOrdenadas
+  //     .map((item) => {
+  //       // Si viene plano en el objeto (como muestra tu consola) o dentro de 'punto'
+  //       return item.nombre || item.punto?.nombre || '';
+  //     })
+  //     .filter(
+  //       (nombre): nombre is string => Boolean(nombre) && nombre.trim() !== '',
+  //     );
+  // }, [viajeSeleccionado, rutas]);
+
+  // 2. Extraer las paradas ya procesadas y ordenadas por el servicio del frontend
   const listaParadas = useMemo(() => {
-    if (!viajeSeleccionado || !viajeSeleccionado.idRuta) return [];
-
-    // 1. Buscamos el arreglo de punto_ruta dentro del viaje o dentro de la ruta
-    const rutaEncontrada = rutas.find(
-      (r) => r.idRuta === viajeSeleccionado.idRuta,
-    );
-
-    if (!rutaEncontrada) return [];
-
-    const puntosRuta = rutaEncontrada.puntos || [];
-
-    if (!Array.isArray(puntosRuta) || puntosRuta.length === 0) return [];
-
-    // 2. Ordenamos por la columna 'orden' que tenés en la base de datos
-    const paradasOrdenadas = [...puntosRuta].sort((a, b) => {
-      const ordenA = a.orden ?? 0;
-      const ordenB = b.orden ?? 0;
-      return ordenA - ordenB;
-    });
-
-    // 3. Extraemos el nombre desde la relación con la tabla 'punto'
-    return paradasOrdenadas
-      .map((item) => {
-        // Si viene plano en el objeto (como muestra tu consola) o dentro de 'punto'
-        return item.nombre || item.punto?.nombre || '';
-      })
-      .filter(
-        (nombre): nombre is string => Boolean(nombre) && nombre.trim() !== '',
-      );
-  }, [viajeSeleccionado, rutas]);
+    if (!viajeSeleccionado) return [];
+    return viajeSeleccionado.paradas || [];
+  }, [viajeSeleccionado]);
 
   // 3. Orígenes disponibles: Todas las paradas menos la ÚLTIMA
   const origenesDisponibles = useMemo(() => {
@@ -536,8 +545,8 @@ export const ReservasPage = () => {
           obtenerViajesSegunRol(),
         ]);
 
-        const rutasData = await rutaService.obtenerTodas().catch(() => []);
-        setRutas(rutasData);
+        //const rutasData = await rutaService.obtenerTodas().catch(() => []);
+        //setRutas(rutasData);
 
         let usuariosData: Usuario[] = [];
         if (user?.rol === 'ADMIN') {
@@ -568,7 +577,7 @@ export const ReservasPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [user, estaLogueado,obtenerViajesSegunRol]);
+  }, [user, estaLogueado, obtenerViajesSegunRol]);
 
   // useEffect(() => {
   //   if (asientoIngresado < 1) {
@@ -802,6 +811,15 @@ export const ReservasPage = () => {
       const idClienteValido =
         data.tipoReserva === 'LOGUEADO' ? data.idCliente || user?.id || '' : '';
 
+      // 🟢 1. CALCULAMOS LOS ÓRDENES NUMÉRICOS DE LOS TRAMOS
+      const idxOrigen = listaParadas.indexOf(data.origen);
+      const idxDestino = listaParadas.indexOf(data.destino);
+
+      // Los órdenes en tu base de datos suelen empezar en 1 (índice + 1)
+      const ordenSubidaCalculado = idxOrigen !== -1 ? idxOrigen + 1 : 1;
+      const ordenBajadaCalculado =
+        idxDestino !== -1 ? idxDestino + 1 : listaParadas.length;
+
       const payload = {
         ...data,
         idCliente: idClienteValido,
@@ -810,6 +828,10 @@ export const ReservasPage = () => {
         destino: data.destino,
         cantPasajeros: cantPasajerosSolicitados,
         cantValijas: cantValijasSolicitadas,
+
+        // 🟢 2. ENVIAMOS LOS ÓRDENES AL BACKEND
+        ordenSubida: ordenSubidaCalculado,
+        ordenBajada: ordenBajadaCalculado,
       };
 
       if (modoEdicion && idEdicion) {
@@ -916,6 +938,21 @@ export const ReservasPage = () => {
                 className="px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-amber-400 outline-none"
               >
                 <option value="">Seleccione un viaje...</option>
+                {/* {viajesCompartidosDisponibles.map((v) => {
+                  const nombreEtiqueta =
+                    //  v.rutaNombre ||
+                    (v.ruta as any)?.nombre || // 👈 Cambiado de v.rutaNombre a v.ruta?.nombre
+                    (v.origen && v.destino
+                      ? `${v.origen} ➔ ${v.destino}`
+                      : `Viaje #${v.id.slice(0, 5)}`);
+
+                  return (
+                    <option key={v.id} value={v.id}>
+                      {nombreEtiqueta}{' '}
+                    </option>
+                  );
+                })} */}
+
                 {viajesCompartidosDisponibles.map((v) => {
                   const nombreEtiqueta =
                     v.rutaNombre ||
@@ -925,7 +962,7 @@ export const ReservasPage = () => {
 
                   return (
                     <option key={v.id} value={v.id}>
-                      {nombreEtiqueta}{' '}
+                      {nombreEtiqueta}
                     </option>
                   );
                 })}
@@ -1225,6 +1262,9 @@ export const ReservasPage = () => {
         </form>
       </div>
 
+
+
+
       {/* TABLA DE RESERVAS */}
       <div className="xl:col-span-2 bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
         <h2 className="text-lg font-bold text-slate-800 mb-4">
@@ -1325,4 +1365,4 @@ export const ReservasPage = () => {
       </div>
     </div>
   );
-};
+};;;;

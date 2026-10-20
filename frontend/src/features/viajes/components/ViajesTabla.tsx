@@ -57,11 +57,32 @@ export const ViajesTabla = ({
     return r ? r.nombre : 'Ruta no asignada';
   };
 
-  const obtenerNombreChofer = (idChofer?: string) => {
-    if (!idChofer) return 'Sin chofer';
-    const c = choferesDisponibles.find((item) => item.idUsuario === idChofer);
-    return c ? `${c.nombre} ${c.apellido}` : 'Sin chofer';
-  };
+  // const obtenerNombreChofer = (idChofer?: string) => {
+  //   if (!idChofer) return 'Sin chofer';
+  //   const c = choferesDisponibles.find((item) => item.idUsuario === idChofer);
+  //   return c ? `${c.nombre} ${c.apellido}` : 'Sin chofer';
+  // };
+
+ const obtenerNombreChofer = (viaje: Viaje) => {
+   // 1. Verificamos que viaje.chofer sea un objeto (y no un string ni null/undefined)
+   if (viaje.chofer && typeof viaje.chofer === 'object') {
+     // Como la interfaz ya define 'nombre' y 'apellido' opcionales,
+     // TypeScript ya los reconoce sin necesidad de castear a 'any'
+     const nombre = viaje.chofer.nombre ?? '';
+     const apellido = viaje.chofer.apellido ?? '';
+     if (nombre || apellido) return `${nombre} ${apellido}`.trim();
+   }
+
+   // 2. Si es un ID en string o viene en idChofer
+   const idChofer =
+     viaje.idChofer || (typeof viaje.chofer === 'string' ? viaje.chofer : '');
+   if (!idChofer) return 'Sin chofer';
+
+   const c = choferesDisponibles.find(
+     (item) => item.idUsuario === idChofer || item.id === idChofer,
+   );
+   return c ? `${c.nombre} ${c.apellido}` : 'Sin chofer';
+ };
 
   return (
     <div
@@ -147,11 +168,19 @@ export const ViajesTabla = ({
                     <td className="py-3 px-4 font-medium text-slate-900 group-hover:text-amber-600 transition-colors">
                       {obtenerNombreRuta(viaje)}
                     </td>
-                    <td className="py-3 px-4">
+                    {/* <td className="py-3 px-4">
                       {viaje.idChofer
-                        ? obtenerNombreChofer(viaje.idChofer)
+                        ? //obtenerNombreChofer(viaje.idChofer)
+                          obtenerNombreChofer(viaje)
+                        : 'Sin chofer'}
+                    </td> */}
+
+                    <td className="py-3 px-4">
+                      {viaje.idChofer || viaje.chofer
+                        ? obtenerNombreChofer(viaje)
                         : 'Sin chofer'}
                     </td>
+
                     <td className="py-3 px-3 text-xs whitespace-nowrap">
                       {viaje.fechaHoraInicio
                         ? new Date(viaje.fechaHoraInicio).toLocaleString()

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Bus,
   Car,
-  Users,
+  
   Phone,
   LogIn,
   LayoutDashboard,
@@ -58,13 +58,7 @@ export function NavbarPublico() {
             <Car className="w-4 h-4" />
             Remis / Coches
           </Link>
-          <Link
-            to="/grupales"
-            className="hover:text-amber-500 transition-colors flex items-center gap-1.5"
-          >
-            <Users className="w-4 h-4" />
-            Traslados Grupales
-          </Link>
+          
         </nav>
 
         {/* Acciones de Contacto, Panel y Logout */}

@@ -47,6 +47,7 @@ export const ViajeForm = ({
     if (viajeAEditar) {
       setValue('idRuta', viajeAEditar.idRuta || '');
       setValue('idChofer', viajeAEditar.idChofer || '');
+      setValue('tipo', viajeAEditar.tipo || 'COMPARTIDO'); // 👈 Seteamos el tipo al editar
       setValue(
         'fechaHoraInicio',
         viajeAEditar.fechaHoraInicio

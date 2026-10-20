@@ -3,6 +3,9 @@ import { z } from 'zod';
 export const viajeSchema = z.object({
   idRuta: z.string().min(1, { message: 'Debe seleccionar una ruta' }),
   idChofer: z.string().optional(),
+
+  tipo: z.enum(['COMPARTIDO', 'PRIVADO']).default('COMPARTIDO'), // 👈 Agregamos el tipo
+
   fechaHoraInicio: z
     .string()
     .min(1, { message: 'La fecha y hora de salida son obligatorias' }),
