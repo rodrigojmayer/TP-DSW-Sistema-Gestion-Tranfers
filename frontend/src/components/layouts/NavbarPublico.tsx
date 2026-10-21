@@ -26,7 +26,7 @@ export function NavbarPublico() {
     if (user.rol === 'CLIENTE') {
       navigate('/admin/reservas'); // O la ruta a la que debe ir el cliente
     } else {
-      navigate('/admin/dashboard');
+      navigate('/admin/viajes');
     }
   };
 
@@ -51,13 +51,13 @@ export function NavbarPublico() {
             <Bus className="w-4 h-4" />
             Bus / Traslados
           </Link>
-          <Link
+          {/* <Link
             to="/coches"
             className="hover:text-amber-500 transition-colors flex items-center gap-1.5"
           >
             <Car className="w-4 h-4" />
             Remis / Coches
-          </Link>
+          </Link> */}
           
         </nav>
 

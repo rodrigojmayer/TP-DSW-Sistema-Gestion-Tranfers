@@ -67,7 +67,7 @@ export function AppRoutes() {
           element={<ProtectedRoute rolesPermitidos={['ADMIN', 'OPERADOR']} />}
         >
           <Route path="/admin" element={<AdminDashboardPage />} />
-          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+          {/* <Route path="/admin/dashboard" element={<AdminDashboardPage />} /> */}
           <Route path="/admin/rutas" element={<RutasPage />} />
           <Route path="/admin/puntos" element={<PuntosPage />} />
         </Route>

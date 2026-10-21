@@ -83,14 +83,8 @@ const formatearDireccionCorta = (direccionLarga: string): string => {
   // 1. Separar la dirección por comas
   const partes = direccionLarga.split(',').map((p) => p.trim());
 
-  // Si tiene pocos elementos, devolver tal cual
-  if (partes.length <= 3) return direccionLarga;
+  if (partes.length <= 2) return direccionLarga;
 
-  // 2. Extraer el Lugar/Lugar de interés + Calle y Altura (las primeras partes)
-//   const lugarOCalle = partes[0];
-//   const alturaOCalle = partes[1];
-
-  // 3. Buscar la Localidad/Ciudad (habitualmente antes de la provincia o Departamento)
   // Palabras a ignorar que suelen ensuciar la dirección
   const palabrasIgnorar = [
     'Distrito',
@@ -100,27 +94,31 @@ const formatearDireccionCorta = (direccionLarga: string): string => {
     'Partido',
     'Provincia',
     'Argentina',
-    'S2000',
-    'S2002',
   ];
 
-  // Filtramos las partes eliminando códigos postales, países y regiones administrativas repetitivas
-  const partesRelevantes = partes.filter(
+  // Filtramos partes basura (códigos postales, países, regiones administrativas)
+  const partesFiltradas = partes.filter(
     (parte) =>
-      !/^\d{4,5}$/.test(parte) && // Códigos postales numéricos
-      !/^S\d{4}/i.test(parte) && // Códigos postales tipo Argentina (S2002)
+      !/^\d{4,5}$/.test(parte) && 
+      !/^S\d{4}/i.test(parte) && 
       !palabrasIgnorar.some((p) => parte.toLowerCase().includes(p.toLowerCase()))
   );
 
-  // Reconstruimos prendiendo el lugar inicial y la ciudad final
-  const primerTramo = partes[0];
-  const segundoTramo = partes[1] && !partesRelevantes.includes(partes[1]) ? partes[1] : '';
-  const ciudad = partesRelevantes[partesRelevantes.length - 1] || '';
+  // Si tenemos suficientes partes, queremos conservar:
+  // - La calle / altura (ej: "Zeballos 1234" o "Zeballos")
+  // - El barrio o localidad principal
+  const calleOAltura = partesFiltradas[0] || partes[0];
+  const localidadOBarrio = partesFiltradas.length > 1 ? partesFiltradas[1] : partes[1];
+  const ciudadPrincipal = partesFiltradas[partesFiltradas.length - 1] || '';
 
-  // Evitar duplicados si el primer tramo ya contiene la ciudad
-  if (primerTramo.toLowerCase().includes(ciudad.toLowerCase())) {
-    return segundoTramo ? `${primerTramo}, ${segundoTramo}` : primerTramo;
+  // Evitamos duplicar si la ciudad ya figura en el nombre de la calle/barrio
+  if (calleOAltura.toLowerCase().includes(ciudadPrincipal.toLowerCase())) {
+    return calleOAltura;
   }
 
-  return `${primerTramo}${segundoTramo ? ', ' + segundoTramo : ''}, ${ciudad}`;
+  if (localidadOBarrio && !calleOAltura.toLowerCase().includes(localidadOBarrio.toLowerCase())) {
+    return `${calleOAltura}, ${localidadOBarrio}, ${ciudadPrincipal}`;
+  }
+
+  return `${calleOAltura}, ${ciudadPrincipal}`;
 };

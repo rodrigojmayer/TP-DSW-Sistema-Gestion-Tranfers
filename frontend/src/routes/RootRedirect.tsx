@@ -13,7 +13,7 @@ export function RootRedirect() {
 
   // 2. Si es Admin u Operador, va a su panel administrativo principal
   if (user.rol === 'ADMIN' || user.rol === 'OPERADOR') {
-    return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to="/admin/viajes" replace />;
   }
 
   // 3. Para clientes y choferes, redirige a sus reservas/panel

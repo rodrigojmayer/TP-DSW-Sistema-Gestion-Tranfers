@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+// src/features/viajes/components/ViajeForm.tsx
+import { useEffect, useState, useRef } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { viajeSchema, type ViajeFormData } from '../schemas/viajeSchema';
@@ -6,6 +7,7 @@ import { viajeService } from '../api/viajeService';
 import type { Viaje, Ruta, Usuario } from '../../../types';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
+import { Search, ChevronDown, Calendar } from 'lucide-react';
 
 interface ViajeFormProps {
   idEditando: string | null;
@@ -22,13 +24,13 @@ export const ViajeForm = ({
   rutasDisponibles,
   choferesDisponibles,
   onSuccess,
-  onCancelar,
 }: ViajeFormProps) => {
   const {
     register,
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ViajeFormData>({
     resolver: zodResolver(viajeSchema) as unknown as Resolver<ViajeFormData>,
@@ -43,11 +45,15 @@ export const ViajeForm = ({
     },
   });
 
+  const idRutaActual = watch('idRuta');
+  const idChoferActual = watch('idChofer');
+  const fechaInicioActual = watch('fechaHoraInicio');
+
   useEffect(() => {
     if (viajeAEditar) {
       setValue('idRuta', viajeAEditar.idRuta || '');
       setValue('idChofer', viajeAEditar.idChofer || '');
-      setValue('tipo', viajeAEditar.tipo || 'COMPARTIDO'); // 👈 Seteamos el tipo al editar
+      setValue('tipo', viajeAEditar.tipo || 'COMPARTIDO');
       setValue(
         'fechaHoraInicio',
         viajeAEditar.fechaHoraInicio
@@ -89,134 +95,337 @@ export const ViajeForm = ({
     }
   };
 
-  const recortarTexto = (texto: string, max: number = 70): string => {
-    if (!texto) return '';
-    return texto.length > max ? `${texto.substring(0, max)}...` : texto;
+  const prevenirNegativos = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+      e.preventDefault();
+    }
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm h-fit">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold text-slate-800">
-          {idEditando ? 'Editar Viaje' : 'Programar Viaje'}
-        </h2>
-        {idEditando && (
-          <button
-            type="button"
-            onClick={onCancelar}
-            className="text-xs text-slate-500 hover:text-slate-700 underline"
-          >
-            Cancelar Edición
-          </button>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Autocompletar Ruta */}
+      <InputAutocompletarRuta
+        etiqueta="Ruta Asignada"
+        rutas={rutasDisponibles}
+        valorActualId={idRutaActual || ''}
+        onSeleccionar={(id) => setValue('idRuta', id, { shouldValidate: true })}
+        error={errors.idRuta?.message}
+      />
+
+      {/* Autocompletar Chofer */}
+      <InputAutocompletarChofer
+        etiqueta="Chofer Responsable"
+        choferes={choferesDisponibles}
+        valorActualId={idChoferActual || ''}
+        onSeleccionar={(id) => setValue('idChofer', id, { shouldValidate: true })}
+        error={errors.idChofer?.message}
+      />
+
+      {/* Fechas distribuidas con restricciones cruzadas */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+        {/* Fecha Salida */}
+        <div className="flex flex-col gap-1 w-full">
+          <label className="text-sm font-medium text-slate-700">Fecha/Hora Salida</label>
+          <div className="relative flex items-center w-full">
+            {(() => {
+              const { ref: regRef, ...rest } = register('fechaHoraInicio');
+              return (
+                <>
+                  <input
+                    type="datetime-local"
+                    max={watch('fechaHoraFin') || ''}
+                    className="w-full text-sm pl-3 pr-10 py-2 border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 text-slate-700 cursor-pointer"
+                    {...rest}
+                    ref={(e) => {
+                      regRef(e);
+                      // @ts-expect-error referencia local para el picker
+                      window.inputSalidaRef = e;
+                    }}
+                  />
+                  <div
+                    onClick={() => {
+                      // @ts-expect-error abrir calendario al hacer click en el icono
+                      window.inputSalidaRef?.showPicker?.();
+                    }}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-slate-400 hover:text-slate-600 transition"
+                  >
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+          {errors.fechaHoraInicio?.message && (
+            <span className="text-xs text-red-500 font-medium">{errors.fechaHoraInicio.message}</span>
+          )}
+        </div>
+
+        {/* Fecha Llegada */}
+        <div className="flex flex-col gap-1 w-full">
+          <label className="text-sm font-medium text-slate-700">Fecha/Hora Llegada</label>
+          <div className="relative flex items-center w-full">
+            {(() => {
+              const { ref: regRefFin, ...restFin } = register('fechaHoraFin');
+              return (
+                <>
+                  <input
+                    type="datetime-local"
+                    min={fechaInicioActual || ''}
+                    className="w-full text-sm pl-3 pr-10 py-2 border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 text-slate-700 cursor-pointer"
+                    {...restFin}
+                    ref={(e) => {
+                      regRefFin(e);
+                      // @ts-expect-error referencia local para el picker
+                      window.inputLlegadaRef = e;
+                    }}
+                  />
+                  <div
+                    onClick={() => {
+                      // @ts-expect-error abrir calendario al hacer click en el icono
+                      window.inputLlegadaRef?.showPicker?.();
+                    }}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-slate-400 hover:text-slate-600 transition"
+                  >
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+          {errors.fechaHoraFin?.message && (
+            <span className="text-xs text-red-500 font-medium">{errors.fechaHoraFin.message}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Capacidades (Sin flechitas y sin negativos) */}
+      <div className="grid grid-cols-2 gap-3">
+        <Input
+          type="number"
+          label="Cupo Pasajeros"
+          min={0}
+          onKeyDown={prevenirNegativos}
+          className="[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+          error={errors.capacidadPasajeros?.message}
+          {...register('capacidadPasajeros')}
+        />
+        <Input
+          type="number"
+          label="Cupo Valijas"
+          min={0}
+          onKeyDown={prevenirNegativos}
+          className="[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+          error={errors.capacidadValijas?.message}
+          {...register('capacidadValijas')}
+        />
+      </div>
+
+      {/* Precio (Sin flechitas y sin negativos) */}
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-slate-700">
+          Precio del Pasaje
+        </label>
+        <div className="relative flex items-center w-full h-10 border border-slate-300 rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-amber-400">
+          <span className="pl-3 pr-1.5 text-sm font-semibold text-slate-400 select-none">
+            $
+          </span>
+          <input
+            type="number"
+            step="0.01"
+            min={0}
+            onKeyDown={prevenirNegativos}
+            {...register('precio', { valueAsNumber: true })}
+            className="w-full h-full pr-3 py-2 bg-transparent text-sm text-slate-800 outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+          />
+        </div>
+        {errors.precio?.message && (
+          <span className="text-xs text-red-500 font-medium">
+            {errors.precio.message}
+          </span>
         )}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Select Ruta */}
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">
-            Ruta Asignada
-          </label>
-          <select
-            {...register('idRuta')}
-            className="px-3 py-2 border border-slate-300 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white"
-          >
-            <option value="">Seleccione una ruta...</option>
-            {rutasDisponibles.map((r) => (
-              <option key={r.idRuta} value={r.idRuta}>
-                {recortarTexto(r.nombre)}
-              </option>
+      <Button type="submit" isLoading={isSubmitting}>
+        {idEditando ? 'Guardar Cambios' : 'Programar Servicio'}
+      </Button>
+    </form>
+  );
+};
+
+// ==========================================
+// SUBCOMPONENTE AUTOCOMPLETAR RUTA
+// ==========================================
+interface InputAutocompletarRutaProps {
+  etiqueta: string;
+  rutas: Ruta[];
+  valorActualId: string | undefined;
+  onSeleccionar: (id: string) => void;
+  error?: string;
+}
+
+const InputAutocompletarRuta = ({
+  etiqueta,
+  rutas,
+  valorActualId,
+  onSeleccionar,
+  error,
+}: InputAutocompletarRutaProps) => {
+  const [textoInput, setTextoInput] = useState<string | null>(null);
+  const [abierto, setAbierto] = useState(false);
+  const contenedorRef = useRef<HTMLDivElement>(null);
+
+  const rutaActual = rutas.find((r) => r.idRuta === valorActualId);
+  const textoFormateado = rutaActual ? rutaActual.nombre : '';
+  const busqueda = textoInput !== null ? textoInput : textoFormateado;
+
+  const rutasFiltradas = rutas.filter((r) => {
+    const query = busqueda.toLowerCase().trim();
+    return r.nombre?.toLowerCase().includes(query);
+  });
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (contenedorRef.current && !contenedorRef.current.contains(e.target as Node)) {
+        setAbierto(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative flex flex-col gap-1" ref={contenedorRef}>
+      <label className="text-sm font-medium text-slate-700">{etiqueta}</label>
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <Search className="w-4 h-4" />
+        </div>
+        <input
+          type="text"
+          placeholder="Escriba para buscar ruta..."
+          value={busqueda}
+          onChange={(e) => {
+            setTextoInput(e.target.value);
+            setAbierto(true);
+            if (!e.target.value) onSeleccionar('');
+          }}
+          onFocus={() => setAbierto(true)}
+          className="w-full text-sm pl-9 pr-8 py-2 border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+        />
+        <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-slate-400">
+          <ChevronDown className="w-4 h-4" />
+        </div>
+
+        {abierto && rutasFiltradas.length > 0 && (
+          <ul className="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-52 overflow-y-auto text-sm divide-y divide-slate-100">
+            {rutasFiltradas.map((r) => (
+              <li
+                key={r.idRuta}
+                onClick={() => {
+                  onSeleccionar(r.idRuta);
+                  setTextoInput(null);
+                  setAbierto(false);
+                }}
+                className="px-3 py-2.5 hover:bg-amber-50 cursor-pointer transition text-slate-700 text-xs font-medium"
+              >
+                {r.nombre}
+              </li>
             ))}
-          </select>
-          {errors.idRuta && (
-            <span className="text-xs text-red-500 font-medium">
-              {errors.idRuta.message}
-            </span>
-          )}
-        </div>
-
-        {/* Select Chofer */}
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">
-            Chofer Responsable
-          </label>
-          <select
-            {...register('idChofer')}
-            className="px-3 py-2 border border-slate-300 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white"
-          >
-            <option value="">Seleccione un chofer...</option>
-            {choferesDisponibles.map((c) => (
-              <option key={c.idUsuario} value={c.idUsuario}>
-                {c.nombre} {c.apellido} (Lic: {c.nroLicencia})
-              </option>
-            ))}
-          </select>
-          {errors.idChofer && (
-            <span className="text-xs text-red-500 font-medium">
-              {errors.idChofer.message}
-            </span>
-          )}
-        </div>
-
-        {/* Fechas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Input
-            type="datetime-local"
-            label="Fecha/Hora Salida"
-            error={errors.fechaHoraInicio?.message}
-            {...register('fechaHoraInicio')}
-          />
-          <Input
-            type="datetime-local"
-            label="Fecha/Hora Llegada"
-            error={errors.fechaHoraFin?.message}
-            {...register('fechaHoraFin')}
-          />
-        </div>
-
-        {/* Capacidades */}
-        <div className="grid grid-cols-2 gap-3">
-          <Input
-            type="number"
-            label="Cupo Pasajeros"
-            error={errors.capacidadPasajeros?.message}
-            {...register('capacidadPasajeros')}
-          />
-          <Input
-            type="number"
-            label="Cupo Valijas"
-            error={errors.capacidadValijas?.message}
-            {...register('capacidadValijas')}
-          />
-        </div>
-
-        {/* Precio */}
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">
-            Precio del Pasaje
-          </label>
-          <div className="relative flex items-center w-full h-10 border border-slate-300 rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-amber-400">
-            <span className="pl-3 pr-1.5 text-sm font-semibold text-slate-400 select-none">
-              $
-            </span>
-            <input
-              type="number"
-              step="0.01"
-              {...register('precio', { valueAsNumber: true })}
-              className="w-full h-full pr-3 py-2 bg-transparent text-sm text-slate-800 outline-none"
-            />
-          </div>
-          {errors.precio?.message && (
-            <span className="text-xs text-red-500 font-medium">
-              {errors.precio.message}
-            </span>
-          )}
-        </div>
-
-        <Button type="submit" isLoading={isSubmitting}>
-          {idEditando ? 'Guardar Cambios' : 'Programar Servicio'}
-        </Button>
-      </form>
+          </ul>
+        )}
+      </div>
+      {error && <span className="text-xs text-red-500 font-medium">{error}</span>}
     </div>
   );
 };
+
+// ==========================================
+// SUBCOMPONENTE AUTOCOMPLETAR CHOFER
+// ==========================================
+interface InputAutocompletarChoferProps {
+  etiqueta: string;
+  choferes: Usuario[];
+  valorActualId: string | undefined;
+  onSeleccionar: (id: string) => void;
+  error?: string;
+}
+
+const InputAutocompletarChofer = ({
+  etiqueta,
+  choferes,
+  valorActualId,
+  onSeleccionar,
+  error,
+}: InputAutocompletarChoferProps) => {
+  const [textoInput, setTextoInput] = useState<string | null>(null);
+  const [abierto, setAbierto] = useState(false);
+  const contenedorRef = useRef<HTMLDivElement>(null);
+
+  const choferActual = choferes.find((c) => c.idUsuario === valorActualId);
+  const textoFormateado = choferActual ? `${choferActual.nombre} ${choferActual.apellido} (Lic: ${choferActual.nroLicencia})` : '';
+  const busqueda = textoInput !== null ? textoInput : textoFormateado;
+
+  const choferesFiltrados = choferes.filter((c) => {
+    const query = busqueda.toLowerCase().trim();
+    const nombreCompleto = `${c.nombre} ${c.apellido} ${c.nroLicencia}`.toLowerCase();
+    return nombreCompleto.includes(query);
+  });
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (contenedorRef.current && !contenedorRef.current.contains(e.target as Node)) {
+        setAbierto(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative flex flex-col gap-1" ref={contenedorRef}>
+      <label className="text-sm font-medium text-slate-700">{etiqueta}</label>
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <Search className="w-4 h-4" />
+        </div>
+        <input
+          type="text"
+          placeholder="Escriba para buscar chofer o licencia..."
+          value={busqueda}
+          onChange={(e) => {
+            setTextoInput(e.target.value);
+            setAbierto(true);
+            if (!e.target.value) onSeleccionar('');
+          }}
+          onFocus={() => setAbierto(true)}
+          className="w-full text-sm pl-9 pr-8 py-2 border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+        />
+        <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-slate-400">
+          <ChevronDown className="w-4 h-4" />
+        </div>
+
+        {abierto && choferesFiltrados.length > 0 && (
+          <ul className="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-52 overflow-y-auto text-sm divide-y divide-slate-100">
+            {choferesFiltrados.map((c) => (
+              <li
+                key={c.idUsuario}
+                onClick={() => {
+                  onSeleccionar(c.idUsuario);
+                  setTextoInput(null);
+                  setAbierto(false);
+                }}
+                className="px-3 py-2.5 hover:bg-amber-50 cursor-pointer transition text-slate-700 text-xs"
+              >
+                <span className="font-semibold block text-slate-900">{c.nombre} {c.apellido}</span>
+                <span className="text-slate-500">Licencia: {c.nroLicencia}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {error && <span className="text-xs text-red-500 font-medium">{error}</span>}
+    </div>
+  );
+};
+
+export default ViajeForm;

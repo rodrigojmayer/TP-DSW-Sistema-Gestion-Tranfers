@@ -15,7 +15,6 @@ interface UsuarioFormProps {
 
 export const UsuarioForm = ({
   usuarioAEditar,
-  onCancelEdit,
   onSuccess,
 }: UsuarioFormProps) => {
   const {
@@ -115,21 +114,7 @@ export const UsuarioForm = ({
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm h-fit">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold text-slate-800">
-          {usuarioAEditar ? 'Editar Registro' : 'Nuevo Empleado'}
-        </h2>
-        {usuarioAEditar && (
-          <button
-            type="button"
-            onClick={onCancelEdit}
-            className="text-xs text-slate-500 hover:text-slate-700 underline"
-          >
-            Cancelar
-          </button>
-        )}
-      </div>
+      
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input
@@ -220,6 +205,5 @@ export const UsuarioForm = ({
           {usuarioAEditar ? 'Guardar Cambios' : 'Guardar Registro'}
         </Button>
       </form>
-    </div>
   );
 };

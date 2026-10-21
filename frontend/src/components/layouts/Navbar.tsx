@@ -1,100 +1,87 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export default function Navbar() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
+  // Estilos dinámicos para los enlaces activos vs inactivos
+  const linkStyles = ({ isActive }: { isActive: boolean }) =>
+    `px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+      isActive
+        ? 'bg-amber-500 text-white font-semibold shadow-sm'
+        : 'text-gray-600 hover:text-amber-600 hover:bg-gray-50'
+    }`;
+
+  const linkStylesMobile = ({ isActive }: { isActive: boolean }) =>
+    `px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+      isActive
+        ? 'bg-amber-500 text-white font-semibold'
+        : 'text-gray-700 hover:bg-gray-100'
+    }`;
+
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
       <div className="w-full px-4 sm:px-8 h-16 flex items-center justify-between">
-        {/* LOGO + ENLACES */}
+        
+        {/* LOGO + ENLACES (Escritorio) */}
         <div className="flex items-center gap-8">
-          <Link
-            to={
-              user?.rol === 'ADMIN' || user?.rol === 'OPERADOR'
-                ? '/admin/dashboard'
-                : '/admin/reservas'
-            }
+          <NavLink
+            to="/admin/viajes"
             className="flex items-center gap-2"
           >
             <div className="bg-amber-500 text-white font-bold p-2 rounded-lg text-sm">
               TR
             </div>
-            <span className="font-bold text-gray-900 text-lg">
+            <span className="font-bold text-gray-900 text-lg tracking-tight">
               Transfers App
             </span>
-          </Link>
+          </NavLink>
 
-          {/* Menú visible SOLO para usuarios autenticados */}
+          {/* Menú visible SOLO para usuarios autenticados en Escritorio */}
           {user && (
-            <nav className="hidden md:flex items-center gap-6">
-              {/* Visible para TODOS los usuarios logueados (ADMIN, OPERADOR, CHOFER, CLIENTE) */}
-              <Link
-                to="/admin/viajes"
-                className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-              >
-                Viajes
-              </Link>
-              <Link
-                to="/admin/reservas"
-                className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-              >
-                Reservas
-              </Link>
-
-              {/* Exclusivo ADMIN y OPERADOR */}
+            <nav className="hidden md:flex items-center gap-1 lg:gap-2">
               {(user.rol === 'ADMIN' || user.rol === 'OPERADOR') && (
                 <>
-                  <Link
-                    to="/admin/dashboard"
-                    className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    to="/admin/rutas"
-                    className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-                  >
-                    Rutas
-                  </Link>
-                  <Link
-                    to="/admin/puntos"
-                    className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-                  >
+                  <NavLink to="/admin/puntos" className={linkStyles}>
                     Puntos
-                  </Link>
+                  </NavLink>
+                  <NavLink to="/admin/rutas" className={linkStyles}>
+                    Rutas
+                  </NavLink>
                 </>
               )}
+              <NavLink to="/admin/viajes" className={linkStyles}>
+                Viajes
+              </NavLink>
+              <NavLink to="/admin/reservas" className={linkStyles}>
+                Reservas
+              </NavLink>
 
-              {/* Exclusivo ADMIN */}
+
               {user.rol === 'ADMIN' && (
-                <Link
-                  to="/admin/usuarios"
-                  className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-                >
+                <NavLink to="/admin/usuarios" className={linkStyles}>
                   Usuarios
-                </Link>
+                </NavLink>
               )}
 
-              {/* Mi Perfil */}
-              <Link
-                to="/perfil"
-                className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-              >
+              <NavLink to="/perfil" className={linkStyles}>
                 Perfil
-              </Link>
+              </NavLink>
             </nav>
           )}
         </div>
 
-        {/* ACCIONES DE USUARIO / INGRESO */}
-        <div className="flex items-center gap-4">
+        {/* ACCIONES DE USUARIO / INGRESO (Escritorio) */}
+        <div className="hidden md:flex items-center gap-4">
           {user ? (
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-gray-700">
@@ -108,251 +95,119 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <Link
+            <NavLink
               to="/login"
               className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors"
             >
               Ingresar
-            </Link>
+            </NavLink>
           )}
         </div>
+
+        {/* BOTÓN HAMBURGUESA (Móvil / Pantallas chicas) */}
+        <div className="flex md:hidden items-center">
+          <button
+            onClick={() => setMenuAbierto(!menuAbierto)}
+            className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Abrir menú"
+          >
+            {menuAbierto ? (
+              <XMarkIcon className="w-6 h-6" />
+            ) : (
+              <Bars3Icon className="w-6 h-6" />
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* MENÚ DESPLEGABLE MÓVIL */}
+      {menuAbierto && (
+        <div className="md:hidden bg-white border-b border-gray-200 px-4 pt-2 pb-4 space-y-3 shadow-lg">
+          {user && (
+            <div className="py-2 border-b border-gray-100 text-xs font-semibold text-gray-600">
+              Sesión: <span className="text-amber-600">{user.nombre} {user.apellido || ''} ({user.rol})</span>
+            </div>
+          )}
+
+          <nav className="flex flex-col space-y-1">
+            <NavLink
+              to="/admin/viajes"
+              onClick={() => setMenuAbierto(false)}
+              className={linkStylesMobile}
+            >
+              Viajes
+            </NavLink>
+            <NavLink
+              to="/admin/reservas"
+              onClick={() => setMenuAbierto(false)}
+              className={linkStylesMobile}
+            >
+              Reservas
+            </NavLink>
+
+            {user && (user.rol === 'ADMIN' || user.rol === 'OPERADOR') && (
+              <>
+                <NavLink
+                  to="/admin/rutas"
+                  onClick={() => setMenuAbierto(false)}
+                  className={linkStylesMobile}
+                >
+                  Rutas
+                </NavLink>
+                <NavLink
+                  to="/admin/puntos"
+                  onClick={() => setMenuAbierto(false)}
+                  className={linkStylesMobile}
+                >
+                  Puntos
+                </NavLink>
+              </>
+            )}
+
+            {user && user.rol === 'ADMIN' && (
+              <NavLink
+                to="/admin/usuarios"
+                onClick={() => setMenuAbierto(false)}
+                className={linkStylesMobile}
+              >
+                Usuarios
+              </NavLink>
+            )}
+
+            {user && (
+              <NavLink
+                to="/perfil"
+                onClick={() => setMenuAbierto(false)}
+                className={linkStylesMobile}
+              >
+                Perfil
+              </NavLink>
+            )}
+          </nav>
+
+          <div className="pt-2 border-t border-gray-100">
+            {user ? (
+              <button
+                onClick={() => {
+                  setMenuAbierto(false);
+                  handleLogout();
+                }}
+                className="w-full text-center px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 border border-red-200 rounded-lg transition-colors"
+              >
+                Cerrar Sesión
+              </button>
+            ) : (
+              <NavLink
+                to="/login"
+                onClick={() => setMenuAbierto(false)}
+                className="block text-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors"
+              >
+                Ingresar
+              </NavLink>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
-
-// import { Link, useNavigate } from 'react-router-dom';
-// import { useAuthStore } from '../../store/authStore';
-
-// export default function Navbar() {
-//   const { user, logout } = useAuthStore();
-//   const navigate = useNavigate();
-
-//   const handleLogout = () => {
-//     logout();
-//     navigate('/login');
-//   };
-
-//   return (
-//     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
-//       <div className="w-full px-4 sm:px-8 h-16 flex items-center justify-between">
-//         {/* LOGO + ENLACES */}
-//         <div className="flex items-center gap-8">
-//           <Link
-//             to={user?.rol === 'ADMIN' ? '/admin/dashboard' : '/'}
-//             className="flex items-center gap-2"
-//           >
-//             <div className="bg-amber-500 text-white font-bold p-2 rounded-lg text-sm">
-//               TR
-//             </div>
-//             <span className="font-bold text-gray-900 text-lg">
-//               Transfers App
-//             </span>
-//           </Link>
-
-//           {/* Menú visible SOLO para usuarios autenticados */}
-//           {user && (
-//             <nav className="hidden md:flex items-center gap-6">
-//               <Link
-//                 to="/viajes"
-//                 className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-//               >
-//                 Viajes
-//               </Link>
-//               <Link
-//                 to="/reservas"
-//                 className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-//               >
-//                 Reservas
-//               </Link>
-
-//               {/* Exclusivo ADMIN */}
-//               {user.rol === 'ADMIN' && (
-//                 <>
-//                   <Link
-//                     to="/puntos"
-//                     className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-//                   >
-//                     Puntos
-//                   </Link>
-//                   <Link
-//                     to="/usuarios"
-//                     className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-//                   >
-//                     Usuarios
-//                   </Link>
-//                 </>
-//               )}
-
-//               {/* Exclusivo CLIENTE */}
-//               {user.rol === 'CLIENTE' && (
-//                 <Link
-//                   to="/perfil"
-//                   className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-//                 >
-//                   Perfil
-//                 </Link>
-//               )}
-//             </nav>
-//           )}
-//         </div>
-
-//         {/* ACCIONES DE USUARIO / INGRESO */}
-//         <div className="flex items-center gap-4">
-//           {user ? (
-//             <div className="flex items-center gap-3">
-//               <span className="text-sm font-medium text-gray-700">
-//                 {user.nombre} {user.apellido || ''}
-//               </span>
-//               <button
-//                 onClick={handleLogout}
-//                 className="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
-//               >
-//                 Cerrar Sesión
-//               </button>
-//             </div>
-//           ) : (
-//             <Link
-//               to="/login"
-//               className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors"
-//             >
-//               Ingresar
-//             </Link>
-//           )}
-//         </div>
-//       </div>
-//     </header>
-//   );
-// }
-
-// import { Link, useNavigate } from 'react-router-dom';
-// import { useAuthStore } from '../../store/authStore';
-
-// export default function Navbar() {
-//   const { user, logout } = useAuthStore();
-//   const navigate = useNavigate();
-
-//   const handleLogout = () => {
-//     logout();
-//     navigate('/login');
-//   };
-
-//   return (
-//     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
-//       <div className="w-full px-4 sm:px-8 h-16 flex items-center justify-between">
-//         {/* LOGO + NOMBRE */}
-//         <div className="flex items-center gap-8">
-//           <Link to="/" className="flex items-center gap-2">
-//             <div className="bg-amber-500 text-white font-bold p-2 rounded-lg text-sm">
-//               TR
-//             </div>
-//             <span className="font-bold text-gray-900 text-lg">
-//               Transfers App
-//             </span>
-//           </Link>
-
-//           {/* ENLACES DE NAVEGACIÓN HORIZONTAL */}
-//           <nav className="hidden md:flex items-center gap-6">
-//             <Link
-//               to="/viajes"
-//               className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-//             >
-//               Viajes
-//             </Link>
-//             <Link
-//               to="/reservas"
-//               className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-//             >
-//               Reservas
-//             </Link>
-//             {user?.rol === 'ADMIN' && (
-//               <>
-//                 <Link
-//                   to="/puntos"
-//                   className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-//                 >
-//                   Puntos
-//                 </Link>
-//                 <Link
-//                   to="/usuarios"
-//                   className="text-gray-600 hover:text-amber-600 font-medium text-sm transition-colors"
-//                 >
-//                   Usuarios
-//                 </Link>
-//               </>
-//             )}
-//           </nav>
-//         </div>
-
-//         {/* ÁREA DE USUARIO Y ACCIONES */}
-//         <div className="flex items-center gap-4">
-//           {user ? (
-//             <div className="flex items-center gap-3">
-//               <span className="text-sm font-medium text-gray-700">
-//                 {user.nombre} {user.apellido}
-//               </span>
-//               <button
-//                 onClick={handleLogout}
-//                 className="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-//               >
-//                 Cerrar Sesión
-//               </button>
-//             </div>
-//           ) : (
-//             <Link
-//               to="/login"
-//               className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors"
-//             >
-//               Ingresar
-//             </Link>
-//           )}
-//         </div>
-//       </div>
-//     </header>
-//   );
-// }
-
-// import { useNavigate, Link } from 'react-router-dom';
-// import {
-//   UserCircleIcon,
-//   ArrowRightStartOnRectangleIcon,
-// } from '@heroicons/react/24/outline';
-// import { useAuthStore } from '../../store/authStore';
-
-// export const Navbar = () => {
-//   const navigate = useNavigate();
-//   const { user, logout } = useAuthStore();
-
-//   const handleLogout = () => {
-//     logout();
-//     navigate('/login', { replace: true });
-//   };
-//   return (
-//     <header className="bg-white border-b border-slate-200 px-6 py-1 flex justify-between items-center">
-//       <h1 className="text-slate-500 font-semibold text-sd">
-//         Panel de Administración
-//       </h1>
-
-//     <Link to="/perfil" style={{ textDecoration: 'none', color: 'inherit', fontWeight: 'bold' }}>
-//        {/* {user ? `${user.nombre} ${user.apellido}` : 'Invitado'} */}
-//       <div className="flex items-center gap-4">
-//         <div className="flex items-center gap-2 text-sm text-slate-600">
-//           <UserCircleIcon className="w-6 h-6 text-slate-400" />
-//             <span className="font-medium">
-//               {user ? `${user.nombre} ${user.apellido}` : 'Invitado'}
-//             </span>
-//         </div>
-
-//         <button
-//           onClick={handleLogout}
-//           className="p-1.5 text-slate-500 hover:text-red-600 transition cursor-pointer"
-//           title="Cerrar Sesión"
-//         >
-//           <ArrowRightStartOnRectangleIcon className="w-5 h-5" />
-//         </button>
-//       </div>
-//     </Link>
-
-//     </header>
-//   );
-// };

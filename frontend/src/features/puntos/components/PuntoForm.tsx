@@ -15,7 +15,6 @@ interface PuntoFormProps {
 
 export const PuntoForm = ({
   puntoAEditar,
-  onCancelEdit,
   onSuccess,
 }: PuntoFormProps) => {
   const {
@@ -72,22 +71,6 @@ export const PuntoForm = ({
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm h-fit">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold text-slate-800">
-          {puntoAEditar ? 'Editar Punto' : 'Nuevo Punto'}
-        </h2>
-        {puntoAEditar && (
-          <button
-            type="button"
-            onClick={onCancelEdit}
-            className="text-xs text-slate-500 hover:text-slate-700 underline"
-          >
-            Cancelar
-          </button>
-        )}
-      </div>
-
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input
           label="Nombre del Punto / Terminal"
@@ -143,6 +126,5 @@ export const PuntoForm = ({
           {puntoAEditar ? 'Guardar Cambios' : 'Crear Punto'}
         </Button>
       </form>
-    </div>
   );
 };

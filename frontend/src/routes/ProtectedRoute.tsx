@@ -18,7 +18,7 @@ export const ProtectedRoute = ({ rolesPermitidos }: ProtectedRouteProps) => {
   if (rolesPermitidos && !rolesPermitidos.includes(user.rol)) {
     // Redirigir según el rol del usuario para evitar caer en el landing público
     const rutaDestino =
-      user.rol === 'CLIENTE' ? '/admin/reservas' : '/admin/dashboard';
+      user.rol === 'CLIENTE' ? '/admin/viajes' : '/admin/viajes';
     return <Navigate to={rutaDestino} replace />;
   }
 

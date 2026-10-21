@@ -99,6 +99,8 @@ export const LoginPage = () => {
             >
               ¿No tienes cuenta? Regístrate aquí
             </button>
+            </div>
+          <div className="mt-4 text-center">
             <button
               type="button"
               onClick={() => navigate('/')}

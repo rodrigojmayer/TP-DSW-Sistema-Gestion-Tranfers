@@ -4,41 +4,49 @@ export interface Coordenada {
   lng: number;
 }
 
+// Dentro de tu servicio donde procesas la respuesta de OpenStreetMap (ej: geoService.ts)
 export interface DireccionSugerida {
   id: string;
-  nombre: string; // Nombre completo/Formateado
+  nombre: string;
   coords: Coordenada;
 }
 
-// Buscar direcciones exactas en Argentina usando OpenStreetMap (Gratis)
-export const buscarDireccionesOSM = async (texto: string): Promise<DireccionSugerida[]> => {
-  if (!texto || texto.trim().length < 3) return [];
-
+export const buscarDireccionesOSM = async (query: string): Promise<DireccionSugerida[]> => {
   try {
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-        texto
-      )}&countrycodes=ar&addressdetails=1&limit=6`,
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5`,
       {
         headers: {
-          // OpenStreetMap requiere que indiques un User-Agent identificativo
-          'User-Agent': 'MiAplicacionTransfer/1.0',
+          'Accept-Language': 'es',
         },
       }
     );
-
     const data = await response.json();
 
-    return data.map((item: any) => ({
-      id: String(item.place_id),
-      nombre: item.display_name,
-      coords: {
-        lat: parseFloat(item.lat),
-        lng: parseFloat(item.lon),
-      },
-    }));
+    return data.map((item: any) => {
+      const calle = item.address?.road || item.address?.pedestrian || '';
+      const altura = item.address?.house_number || '';
+      const ciudad = item.address?.city || item.address?.town || item.address?.village || item.address?.county || '';
+      const provincia = item.address?.state || '';
+
+      // Construimos un nombre limpio priorizando la altura exacta si la API la reconoció
+      let nombreFormateado = item.display_name;
+      if (calle) {
+        const direccionBase = altura ? `${calle} ${altura}` : calle;
+        nombreFormateado = `${direccionBase}, ${ciudad || provincia}`.replace(/^,\s*/, '');
+      }
+
+      return {
+        id: item.place_id,
+        nombre: nombreFormateado,
+        coords: {
+          lat: parseFloat(item.lat),
+          lng: parseFloat(item.lon),
+        },
+      };
+    });
   } catch (error) {
-    console.error('Error al consultar OpenStreetMap:', error);
+    console.error('Error al buscar direcciones:', error);
     return [];
   }
 };
