@@ -29,7 +29,6 @@ export interface Pasajero {
   idReserva?: string; 
 }
 
-
 export interface ModeloVehiculo {
   idModelo: string | number;
   marca: string;
@@ -42,27 +41,23 @@ export interface ModeloVehiculo {
 
 export interface Vehiculo {
   idVehiculo: string | number;
-  // Relación 0..N a 1
   modeloVehiculo?: ModeloVehiculo;
 }
 
 export interface AgendaVehiculo {
   idAgenda: string | number;
-  fechaHoraInicio: Date | string; // string si usas ISO strings (ej: '2023-10-12T10:00:00Z')
+  fechaHoraInicio: Date | string; 
   fechaHoraFin: Date | string;
   tipo: string;
-  // Relación 0..N a 1
   vehiculo?: Vehiculo;
 }
 
-// --- RUTAS (Para viajes compartidos) ---
 export interface PuntoRutaBackend {
   id?: string;
   ruta_id?: string;
   punto_id?: string;
   orden: number;
   nombre?: string;
-  // Relación populada desde el backend con la tabla 'punto'
   punto?: Punto;
 }
 export type PuntoRuta = Omit<PuntoRutaBackend, 'id'> & {
@@ -93,7 +88,7 @@ export interface PuntoBackend {
   id: string;
   nombre: string;
   direccion: string;
-  tipo: TipoPunto; // o tu TipoPunto si lo tenés exportado
+  tipo: TipoPunto; 
   latitud: string;
   longitud: string;
   createdAt?: string;
@@ -126,10 +121,6 @@ export interface CrearRutaInput {
     }[];
 }
 
-
-// traido de feature/page/viajePage por refactorizacion
- //Estructura opcional de punto medio en la ruta
-
 export interface PuntoDetalle {
   nombre: string;
   direccion?: string;
@@ -138,11 +129,6 @@ export interface PuntoDetalle {
   valijasDisponibles: number;
 }
 
-
-
-
-
-// --- VIAJES ---
 export interface ViajeBackend {
   id: string;
   tipo: 'COMPARTIDO' | 'PRIVADO';
@@ -155,7 +141,6 @@ export interface ViajeBackend {
     id: string;
     nombre: string;
   } | string;
-  // AGREGAR ESTAS DOS PROPIEDADES:
   idChofer?: string;
   chofer?: {
     id: string;
@@ -183,7 +168,6 @@ export interface Viaje {
   id: string;
   idRuta?: string;
   idChofer?: string;
- 
   fechaHoraInicio: string;
   fechaHoraFin?: string;
   precio: number;
@@ -191,9 +175,7 @@ export interface Viaje {
   capacidadPasajeros?: number;
   capacidadValijas?: number;
   rutaNombre?: string;
-  // estado: string;
   tipo?: 'COMPARTIDO' | 'PRIVADO';
-  // tipo?: string;
   origen?: string | PuntoGeografico;
   destino?: string | PuntoGeografico;
   fechaHora?: string;
@@ -206,12 +188,8 @@ export interface Viaje {
         email?: string;
       }
     | string;
-  // paradas?: Parada[];
   paradas?: Array<{ nombre: string } | string>;
-  // AGREGAR ESTA PROPIEDAD POBLADA:
   ruta?: RutaBackend;
-
-  // 🟢 [MODIFICACIÓN] Añadida la propiedad opcional 'reservas' tipada de forma limpia
   reservas?: Array<{
     id?: string;
     usuario?: Usuario | string;
@@ -220,7 +198,6 @@ export interface Viaje {
   }>;
 }
 
-// 🟢 Interfaces de entrada/payload agregadas:
 export interface CrearViajeInput {
   idRuta?: string;
   idChofer?: string;
@@ -236,9 +213,6 @@ export interface CrearViajeInput {
 
 export type ActualizarViajeInput = Partial<CrearViajeInput>;
 
-
-
-// --- RESERVAS (Herencia) ---
 export interface ReservaViajeBase {
   idViaje: string | number;
   origen: string;
@@ -250,8 +224,6 @@ export interface ReservaViajeBase {
   habilitado: boolean;
   precio: number;
   pagoAbonado: boolean;
-
-  // Relaciones
   usuario?: Usuario;
   agendaVehiculo?: AgendaVehiculo;
 }
@@ -263,27 +235,10 @@ export interface ReservaPrivado extends ReservaViajeBase {
 export interface ReservaCompartido extends ReservaViajeBase {
   tipoViaje: 'COMPARTIDO';
   descuento: number;
-  // Relación 1 a 1 específica de Compartido
   ruta?: Ruta;
 }
 
-// Tipo global exportable que el frontend usará para evaluar la UI
 export type ReservaViaje = ReservaPrivado | ReservaCompartido;
-
-// export type EstadoReserva = 'RESERVADO' | 'PAGADO' | 'CANCELADO';
-
-// export interface Reserva {
-//   idReserva: string;
-//   idViaje: string;
-//   idPasajero: string;
-//   asiento: number;
-//   precioFinal: number;
-//   estado: EstadoReserva;
-//   fechaReserva: string;
-// }
-
-// modificado usuario logueado y sin loguear
-
 
 export type EstadoReserva = 'RESERVADO' | 'PAGADO' | 'CANCELADO';
 
@@ -332,7 +287,7 @@ export interface CrearReservaPrivadaFormData {
   pasajeroTelefono?: string;
   origen: PuntoInput;
   destino: PuntoInput;
-  fechaHoraInicio: string; // ISO String
+  fechaHoraInicio: string; 
   fechaHoraFin?: string;
   cantPasajeros: number;
   cantValijas?: number;

@@ -13,7 +13,6 @@ export default function Navbar() {
     navigate('/login');
   };
 
-  // Estilos dinámicos para los enlaces activos vs inactivos
   const linkStyles = ({ isActive }: { isActive: boolean }) =>
     `px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
       isActive
@@ -32,21 +31,17 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
       <div className="w-full px-4 sm:px-8 h-16 flex items-center justify-between">
         
-        {/* LOGO + ENLACES (Escritorio) */}
         <div className="flex items-center gap-8">
           <NavLink
             to="/admin/viajes"
-            className="flex items-center gap-2"
+            className="flex items-center "
           >
-            <div className="bg-amber-500 text-white font-bold p-2 rounded-lg text-sm">
-              TR
-            </div>
+            <img src="/logo1.png" width="100" alt="Logo" />
             <span className="font-bold text-gray-900 text-lg tracking-tight">
               Transfers App
             </span>
           </NavLink>
 
-          {/* Menú visible SOLO para usuarios autenticados en Escritorio */}
           {user && (
             <nav className="hidden md:flex items-center gap-1 lg:gap-2">
               {(user.rol === 'ADMIN' || user.rol === 'OPERADOR') && (

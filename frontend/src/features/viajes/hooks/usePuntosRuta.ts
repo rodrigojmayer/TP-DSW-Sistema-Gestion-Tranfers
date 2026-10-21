@@ -10,7 +10,6 @@ export interface PuntoRuta {
 
 export function usePuntosRuta(puntosIniciales: PuntoRuta[] = []) {
   const [puntos, setPuntos] = useState<PuntoRuta[]>(puntosIniciales);
-
   const agregarPunto = (nuevoPunto: Omit<PuntoRuta, 'orden'>) => {
     setPuntos((prev) => [...prev, { ...nuevoPunto, orden: prev.length + 1 }]);
   };
@@ -20,7 +19,7 @@ export function usePuntosRuta(puntosIniciales: PuntoRuta[] = []) {
       (prev) =>
         prev
           .filter((_, i) => i !== index)
-          .map((punto, i) => ({ ...punto, orden: i + 1 })), // Reorganiza el orden
+          .map((punto, i) => ({ ...punto, orden: i + 1 })), 
     );
   };
 

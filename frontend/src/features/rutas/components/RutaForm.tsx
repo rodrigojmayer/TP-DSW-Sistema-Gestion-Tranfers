@@ -1,4 +1,3 @@
-// src/features/rutas/components/RutaForm.tsx
 import { useEffect, useState, useRef } from 'react';
 import { useForm, useFieldArray, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,7 +22,6 @@ export const RutaForm = ({
   const [catalogoPuntos, setCatalogoPuntos] = useState<Punto[]>([]);
   const [cargandoPuntos, setCargandoPuntos] = useState(true);
 
-  // 1. Cargar el catálogo de puntos registrados en la BD
   useEffect(() => {
     const obtenerCatalogo = async () => {
       try {
@@ -38,7 +36,6 @@ export const RutaForm = ({
     obtenerCatalogo();
   }, []);
 
-  // 2. Formulario vinculado a Zod
   const {
     register,
     handleSubmit,
@@ -58,25 +55,20 @@ export const RutaForm = ({
     },
   });
 
-  // 3. Manejo dinámico del arreglo de paradas
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'puntos',
   });
 
-  // Observamos los valores actuales de los puntos en el form
   const puntosWatch = watch('puntos');
 
-  // 4. Sincronización al editar o resetear formulario
   useEffect(() => {
     if (rutaAEditar) {
-      // Interfaz para un punto individual dentro del objeto punto
       interface ObjetoPunto {
         idPunto?: string;
         id?: string;
       }
 
-      // Interfaz local para tipar las paradas que vienen del backend de forma segura
       interface ParadaBackend {
         orden?: number;
         idPunto?: string;
@@ -86,7 +78,6 @@ export const RutaForm = ({
         punto?: string | ObjetoPunto;
       }
 
-      // Extendemos el tipo de rutaAEditar de forma segura sin usar 'any'
       const rutaExt = rutaAEditar as Ruta & {
         puntosRuta?: ParadaBackend[];
         origen?: string | ObjetoPunto;
@@ -107,7 +98,6 @@ export const RutaForm = ({
       );
 
       const puntosFormateados = ordenados.map((p: ParadaBackend, index: number) => {
-        // Extraemos de forma segura el ID validando si 'p.punto' es un objeto o no
         const idPuntoExtraido = 
           typeof p.punto === 'object' && p.punto !== null
             ? p.punto.idPunto || p.punto.id || ''
@@ -147,7 +137,6 @@ export const RutaForm = ({
     }
   }, [rutaAEditar, reset]);
 
-  // 5. Envío al Backend
   const onSubmit = async (data: RutaFormData) => {
     const datosConOrden = {
       ...data,
@@ -168,7 +157,6 @@ export const RutaForm = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {/* Campo estático: Nombre */}
       <Input
         label="Nombre de la Ruta"
         placeholder="Ej: Buenos Aires - Rosario"
@@ -176,7 +164,6 @@ export const RutaForm = ({
         {...register('nombre')}
       />
 
-      {/* Campos dinámicos: Array de Selección de Puntos con Buscador */}
       <div className="space-y-3 pt-2">
         <div className="flex justify-between items-center">
           <label className="text-sm font-semibold text-slate-700">
@@ -229,9 +216,6 @@ export const RutaForm = ({
   );
 };
 
-// ==========================================
-// SUBCOMPONENTE DE AUTOCOMPLETADO PARA CADA PARADA
-// ==========================================
 interface InputAutocompletarProps {
   index: number;
   etiqueta: string;
@@ -254,13 +238,10 @@ const InputAutocompletarPunto = ({
   const [abierto, setAbierto] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
 
-  // 1. Buscamos el punto actual basado en el ID seleccionado en el formulario
   const puntoActual = catalogoPuntos.find(
     (p) => (p.idPunto || p.id) === valorActualId
   );
 
-  // 2. El texto que se muestra en el input es el texto escrito por el usuario (si está escribiendo) 
-  // o el nombre del punto seleccionado externamente.
   const textoFormateado = puntoActual
     ? (puntoActual.nombre && puntoActual.direccion
         ? `${puntoActual.nombre} - ${puntoActual.direccion}`
@@ -269,7 +250,6 @@ const InputAutocompletarPunto = ({
 
   const busqueda = textoInput !== null ? textoInput : textoFormateado;
 
-  // Filtrar el catálogo según lo que el usuario escriba
   const puntosFiltrados = catalogoPuntos.filter((p) => {
     const query = busqueda.toLowerCase().trim();
     const nombre = p.nombre?.toLowerCase() || '';
@@ -277,7 +257,6 @@ const InputAutocompletarPunto = ({
     return nombre.includes(query) || direccion.includes(query);
   });
 
-  // Cerrar la lista al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (contenedorRef.current && !contenedorRef.current.contains(e.target as Node)) {
@@ -316,7 +295,6 @@ const InputAutocompletarPunto = ({
             <ChevronDown className="w-4 h-4" />
           </div>
 
-          {/* Lista desplegable flotante */}
           {abierto && puntosFiltrados.length > 0 && (
             <ul className="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-52 overflow-y-auto text-sm divide-y divide-slate-100 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300">
               {puntosFiltrados.map((punto) => {
@@ -327,7 +305,7 @@ const InputAutocompletarPunto = ({
                     key={idPuntoReal}
                     onClick={() => {
                       onSeleccionar(idPuntoReal);
-                      setTextoInput(null); // Limpiamos el texto libre para volver a mostrar el valor oficial seleccionado
+                      setTextoInput(null); 
                       setAbierto(false);
                     }}
                     className="px-3 py-2.5 hover:bg-amber-50 cursor-pointer transition text-slate-700 text-xs"

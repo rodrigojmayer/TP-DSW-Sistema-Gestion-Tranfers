@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAuthStore } from '../../../store/authStore'; // Ajusta la ruta a tu authStore
-import type { Usuario } from '../../../types'; // Ajusta la ruta a tu tipo Usuario
+import { useAuthStore } from '../../../store/authStore'; 
+import type { Usuario } from '../../../types'; 
 
 interface UsuarioForm {
   nombre: string;
@@ -17,7 +17,6 @@ interface UsuarioForm {
 export const MiPerfilPage: React.FC = () => {
   const { user, token, login } = useAuthStore();
 
-  // Inicializamos el estado del formulario directamente desde el usuario autenticado
   const [formData, setFormData] = useState<UsuarioForm>(() => ({
     nombre: user?.nombre || '',
     apellido: user?.apellido || '',
@@ -67,7 +66,6 @@ export const MiPerfilPage: React.FC = () => {
         body: JSON.stringify(payload),
       });
 
-      // Si Express responde 404 HTML u otro status fallido, se valida antes de res.json()
       if (!res.ok) {
         const errorText = await res.text();
         let errorJson;
@@ -78,10 +76,7 @@ export const MiPerfilPage: React.FC = () => {
         }
         throw new Error(errorJson.error || 'Error al actualizar el perfil');
       }
-
       const usuarioActualizadoServidor = await res.json();
-
-      // Actualizamos Zustand y localStorage con la respuesta limpia del backend
       const usuarioActualizado = { ...user, ...usuarioActualizadoServidor };
       delete (usuarioActualizado as Partial<Usuario>).password;
 

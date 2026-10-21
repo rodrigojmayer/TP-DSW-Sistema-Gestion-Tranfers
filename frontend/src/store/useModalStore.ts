@@ -1,9 +1,7 @@
-// src/store/useModalStore.ts
 import { create } from 'zustand';
 import type { ReactNode } from 'react';
 import type { Viaje } from '../types';
 
-// 1. Agregamos los nuevos tipos de modales que necesitas
 export type ModalType =
   | 'DETALLE_VIAJE'
   | 'VER_DETALLE_VIAJE'
@@ -11,7 +9,7 @@ export type ModalType =
   | 'CREAR_VIAJE'
   | 'EDITAR_VIAJE'
   | 'CONFIRMAR_ELIMINAR'
-  | 'CREAR_RESERVA' // 🟢 Añade esta opción aquí
+  | 'CREAR_RESERVA' 
   | 'CUSTOM'
   | null;
 
@@ -35,7 +33,6 @@ interface ModalState {
   title?: string;
   data: ModalData;
   content?: ReactNode | null;
-  // Permitimos enviar las opciones tradicionales ({ title, data }) o directamente el objeto ModalData
   openModal: (
     type: ModalType,
     optionsOrData?: ModalOptions | ModalData,
@@ -52,7 +49,6 @@ export const useModalStore = create<ModalState>((set) => ({
 
   openModal: (type, optionsOrData = {}) =>
     set(() => {
-      // Normalizamos la entrada para soportar openModal('DETALLE_VIAJE', { viaje })
       const isOptionsObj =
         'title' in optionsOrData ||
         'data' in optionsOrData ||
@@ -87,76 +83,3 @@ export const useModalStore = create<ModalState>((set) => ({
       content: null,
     }),
 }));
-
-// ****************  MODAL STORE  *****************
-
-// import { create } from 'zustand';
-// import type { ReactNode } from 'react';
-// import type { Viaje } from '../types';
-
-// export type ModalType = 'DETALLE_VIAJE' | 'CUSTOM' | null;
-
-// export interface ModalData {
-//   viaje?: Viaje;
-//   [key: string]: unknown;
-// }
-
-// interface ModalState {
-//   isOpen: boolean;
-//   type: ModalType;
-//   title?: string;
-//   data: ModalData;
-//   content?: ReactNode | null;
-//   openModal: (
-//     type: ModalType,
-//     options?: { title?: string; data?: ModalData; content?: ReactNode },
-//   ) => void;
-//   closeModal: () => void;
-// }
-
-// export const useModalStore = create<ModalState>((set) => ({
-//   isOpen: false,
-//   type: null,
-//   title: '',
-//   data: {},
-//   content: null,
-
-//   openModal: (type, options = {}) =>
-//     set({
-//       isOpen: true,
-//       type,
-//       title: options.title || '',
-//       data: options.data || {},
-//       content: options.content || null,
-//     }),
-
-//   closeModal: () =>
-//     set({
-//       isOpen: false,
-//       type: null,
-//       title: '',
-//       data: {},
-//       content: null,
-//     }),
-// }));
-
-//*************** */
-
-// import { create } from 'zustand';
-// import type { ReactNode } from 'react';
-
-// interface ModalState {
-//   isOpen: boolean;
-//   title: string;
-//   content: ReactNode | null;
-//   openModal: (title: string, content: ReactNode) => void;
-//   closeModal: () => void;
-// }
-
-// export const useModalStore = create<ModalState>((set) => ({
-//   isOpen: false,
-//   title: '',
-//   content: null,
-//   openModal: (title, content) => set({ isOpen: true, title, content }),
-//   closeModal: () => set({ isOpen: false, title: '', content: null }),
-// }));

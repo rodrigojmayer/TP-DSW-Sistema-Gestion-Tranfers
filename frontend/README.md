@@ -18,9 +18,3 @@ El proyecto utiliza un enfoque orientado a características (Feature-Sliced Desi
 * `src/components/`: Componentes atómicos de UI (Button, Input) y Layouts globales.
 * `src/types/`: Centraliza las interfaces de TypeScript basadas en el modelo de datos.
 * `src/api/`: Configuración de servicios y simulación de datos (Mocking).
-
-
-
-
-
-

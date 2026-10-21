@@ -1,4 +1,3 @@
-// src/features/reservas/pages/ReservasPage.tsx
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useForm, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,7 +36,6 @@ export const ReservasPage = () => {
   const [modoEdicion, setModoEdicion] = useState(false);
   const [idEdicion, setIdEdicion] = useState<string | null>(null);
 
-  // Estados de Paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const elementosPorPagina = 10;
 
@@ -452,7 +450,6 @@ export const ReservasPage = () => {
     return reservas.filter((r: Reserva) => {
       const query = busqueda.toLowerCase().trim();
       
-      // Tipado seguro sin usar 'any'
       const persona = (r.usuario && typeof r.usuario === 'object' ? r.usuario : {}) as Record<string, unknown>;
       
       const reservaConPasajero = r as Reserva & { pasajeroNombre?: string; pasajeroApellido?: string; pasajeroDni?: string };
@@ -638,6 +635,17 @@ export const ReservasPage = () => {
     }
   };
 
+  const obtenerFechaHoraActualLocal = () => {
+    const ahora = new Date();
+    const pad = (n: number) => (n < 10 ? `0${n}` : n);
+    const anio = ahora.getFullYear();
+    const mes = pad(ahora.getMonth() + 1);
+    const dia = pad(ahora.getDate());
+    const hora = pad(ahora.getHours());
+    const minuto = pad(ahora.getMinutes());
+    return `${anio}-${mes}-${dia}T${hora}:${minuto}`;
+  };
+
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -718,26 +726,20 @@ export const ReservasPage = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {reservasPaginadas.map((r: Reserva) => {
-                    // 1. Tipamos de forma segura la reserva como un objeto genérico o de registro
                     const reservaObj = r as unknown as Record<string, unknown>;
-
-                    // 2. Extraemos el ID del usuario o pasajero
                     const idPersona = typeof r.usuario === 'string' 
                       ? r.usuario 
                       : (r.usuario && typeof r.usuario === 'object' ? (r.usuario as { id?: string; idUsuario?: string }).id || (r.usuario as { idUsuario?: string }).idUsuario : reservaObj.pasajero || reservaObj.cliente);
 
-                    // 3. Buscamos los datos del usuario en la lista de clientes o en el usuario logueado actual
                     const usuarioEncontrado = clientes.find(
                       (c) => c.id === idPersona || c.idUsuario === idPersona
                     ) || (user?.id === idPersona ? user : null);
 
-                    // 4. Obtenemos los campos finales priorizando el usuario encontrado o propiedades alternativas de la reserva
                     const nombrePasajero = usuarioEncontrado?.nombre || String(reservaObj.pasajeroNombre || '');
                     const apellidoPasajero = usuarioEncontrado?.apellido || String(reservaObj.pasajeroApellido || '');
                     const dniPasajero = usuarioEncontrado?.dni || String(reservaObj.pasajeroDni || 'N/A');
                     const emailPasajero = usuarioEncontrado?.email || String(reservaObj.pasajeroEmail || 'N/A');
                     const telefonoPasajero = usuarioEncontrado?.telefono || String(reservaObj.pasajeroTelefono || 'N/A');
-
                     const tieneNombre = Boolean(nombrePasajero.trim() || apellidoPasajero.trim());
 
                     return (
@@ -803,7 +805,6 @@ export const ReservasPage = () => {
               </table>
             </div>
 
-            {/* CONTROLES DE PAGINACIÓN */}
             {totalPaginas > 1 && (
               <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <span className="text-xs text-slate-500">
@@ -994,7 +995,6 @@ export const ReservasPage = () => {
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Fecha y Hora de Inicio */}
                   <div className="flex flex-col gap-1">
                     <label className="text-sm font-medium text-slate-700">Fecha y Hora de Inicio</label>
                     <div className="relative flex items-center">
@@ -1003,6 +1003,7 @@ export const ReservasPage = () => {
                         value={fechaInicio}
                         disabled={tipoViaje === 'COMPARTIDO'}
                         onChange={(e) => setFechaInicioPrivada(e.target.value)}
+                        min={obtenerFechaHoraActualLocal()}
                         id="input-fecha-inicio-reserva"
                         className="w-full px-3 py-2 pr-10 border border-slate-300 rounded-md text-sm bg-white disabled:bg-slate-100 outline-none focus:ring-2 focus:ring-amber-400"
                       />
@@ -1022,7 +1023,6 @@ export const ReservasPage = () => {
                     </div>
                   </div>
 
-                  {/* Fecha y Hora de Fin */}
                   <div className="flex flex-col gap-1">
                     <label className="text-sm font-medium text-slate-700">Fecha y Hora de Fin</label>
                     <div className="relative flex items-center">

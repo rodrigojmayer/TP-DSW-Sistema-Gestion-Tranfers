@@ -8,7 +8,6 @@ export interface OcupacionInfo {
   porcentajeOcupacion: number;
 }
 
-// Helper seguro para extraer mensajes de error evitando 'any'
 function getErrorMessage(err: unknown, fallbackMessage: string): string {
   if (err instanceof Error) return err.message;
   return fallbackMessage;
@@ -31,13 +30,8 @@ export function useOcupacionViaje(viajeId?: string | number) {
         const viaje = await viajeService.obtenerPorId(String(viajeId));
 
         if (!cancelado) {
-          // 🟢 1. Usamos la propiedad `capacidadPasajeros` definida directamente en Viaje
           const asientosTotales = viaje.capacidadPasajeros || 0;
-
-          // 🟢 2. Calculamos los ocupados según el array de paradas/ocupación o pasajes si existieran
-          // Si por el momento no tenés el listado de pasajes en la entidad Viaje, asumimos 0 o la longitud de punto_ruta
           const asientosOcupados = 0;
-
           const asientosDisponibles = Math.max(
             0,
             asientosTotales - asientosOcupados,

@@ -1,11 +1,9 @@
 import { z } from 'zod';
 
-// Campos compartidos base
 const reservaBase = {
   tipoViaje: z.enum(['COMPARTIDO', 'PRIVADO'] as const, {
     message: 'Debe seleccionar un tipo de viaje válido',
   }),
-  // 💡 Permite string opcional o cadena vacía inicialmente
   idViaje: z.string().optional().or(z.literal('')),
   origen: z.string().min(1, 'Debe ingresar o seleccionar un origen'),
   destino: z.string().min(1, 'Debe ingresar o seleccionar un destino'),
@@ -23,7 +21,6 @@ const reservaBase = {
   precioFinal: z.coerce.number().min(0.01, 'El precio debe ser mayor a 0'),
 };
 
-// 1. Esquema cuando el comprador es un Cliente Autenticado
 const reservaLogueadoSchema = z.object({
   ...reservaBase,
   tipoReserva: z.literal('LOGUEADO'),
@@ -39,7 +36,6 @@ const reservaLogueadoSchema = z.object({
   pasajeroTelefono: z.string().optional().or(z.literal('')),
 });
 
-// 2. Esquema cuando la reserva es de un Invitado (Express)
 const reservaInvitadoSchema = z.object({
   ...reservaBase,
   tipoReserva: z.literal('INVITADO'),
@@ -53,7 +49,6 @@ const reservaInvitadoSchema = z.object({
     .min(8, 'Teléfono obligatorio para el servicio de transfer'),
 });
 
-// Función de refinamiento condicional para validar 'idViaje' según el 'tipoViaje'
 const validarTipoViaje = (
   data: z.infer<typeof reservaLogueadoSchema> | z.infer<typeof reservaInvitadoSchema>,
   ctx: z.RefinementCtx
@@ -67,7 +62,6 @@ const validarTipoViaje = (
   }
 };
 
-// Unimos ambos esquemas y aplicamos la refinación condicional
 export const reservaSchema = z
   .discriminatedUnion('tipoReserva', [
     reservaLogueadoSchema,
@@ -75,7 +69,6 @@ export const reservaSchema = z
   ])
   .superRefine(validarTipoViaje);
 
-// Alias de exportación
 export const crearReservaSchema = reservaSchema;
 
 export type ReservaFormData = z.infer<typeof reservaSchema>;

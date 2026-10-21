@@ -4,7 +4,6 @@ export interface Coordenada {
   lng: number;
 }
 
-// Dentro de tu servicio donde procesas la respuesta de OpenStreetMap (ej: geoService.ts)
 export interface DireccionSugerida {
   id: string;
   nombre: string;
@@ -29,7 +28,6 @@ export const buscarDireccionesOSM = async (query: string): Promise<DireccionSuge
       const ciudad = item.address?.city || item.address?.town || item.address?.village || item.address?.county || '';
       const provincia = item.address?.state || '';
 
-      // Construimos un nombre limpio priorizando la altura exacta si la API la reconoció
       let nombreFormateado = item.display_name;
       if (calle) {
         const direccionBase = altura ? `${calle} ${altura}` : calle;
@@ -51,9 +49,8 @@ export const buscarDireccionesOSM = async (query: string): Promise<DireccionSuge
   }
 };
 
-// Se mantiene el cálculo Haversine
 export const calcularDistanciaHaversine = (puntoA: Coordenada, puntoB: Coordenada): number => {
-  const R = 6371; // Radio de la Tierra en km
+  const R = 6371; 
   const dLat = ((puntoB.lat - puntoA.lat) * Math.PI) / 180;
   const dLng = ((puntoB.lng - puntoA.lng) * Math.PI) / 180;
 

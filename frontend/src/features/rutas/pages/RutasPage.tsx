@@ -1,4 +1,3 @@
-// src/features/rutas/pages/RutasPage.tsx
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import type { Ruta } from '../../../types';
 import { rutaService } from '../api/rutaService';
@@ -12,7 +11,6 @@ export const RutasPage = () => {
   const [busqueda, setBusqueda] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
 
-  // Estados de Paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const elementosPorPagina = 10;
 
@@ -50,7 +48,6 @@ export const RutasPage = () => {
     };
   }, []);
 
-  // Bloquear scroll de la página principal al abrir el modal
   useEffect(() => {
     if (modalAbierto) {
       document.body.style.overflow = 'hidden';
@@ -76,7 +73,6 @@ export const RutasPage = () => {
     });
   }, [rutas, busqueda]);
 
-  // Elementos paginados para la tabla actual
   const rutasPaginadas = useMemo(() => {
     const inicio = (paginaActual - 1) * elementosPorPagina;
     return rutasFiltradas.slice(inicio, inicio + elementosPorPagina);
@@ -116,7 +112,6 @@ export const RutasPage = () => {
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* 1. HEADER PRINCIPAL */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className=" font-bold text-gray-900">Gestión de Rutas</h1>
@@ -142,7 +137,6 @@ export const RutasPage = () => {
         </div>
       </div>
 
-      {/* 2. BARRA DE BÚSQUEDA */}
       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -156,7 +150,6 @@ export const RutasPage = () => {
         </div>
       </div>
 
-      {/* 3. TABLA PRINCIPAL DE RUTAS */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-bold text-slate-800">Rutas Activas</h2>
@@ -203,7 +196,7 @@ export const RutasPage = () => {
                           {ruta.nombre}
                         </td>
                         <td className="py-3 px-4">
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                          <span className="px-2 py-1 text-xs font-medium text-slate-700">
                             {puntosOrdenados.length} puntos
                           </span>
                         </td>
@@ -234,7 +227,6 @@ export const RutasPage = () => {
               </table>
             </div>
 
-            {/* CONTROLES DE PAGINACIÓN */}
             {totalPaginas > 1 && (
               <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <span className="text-xs text-slate-500">
@@ -283,39 +275,33 @@ export const RutasPage = () => {
         )}
       </div>
 
-      {/* 4. MODAL FLOTANTE PARA CREAR / EDITAR RUTA */}
-{modalAbierto && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-    {/* Contenedor principal con overflow-visible para dejar salir la lista */}
-    <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full my-8 flex flex-col relative overflow-visible">
-      {/* Header Fijo */}
-      <div className="flex justify-between items-center border-b px-6 py-4 bg-white sticky top-0 z-30 rounded-t-2xl">
-        <h2 className="text-lg font-bold text-slate-800">
-          {rutaAEditar ? 'Editar Ruta' : 'Nueva Ruta'}
-        </h2>
-        <button
-          type="button"
-          onClick={handleCerrarModal}
-          className="text-slate-400 hover:text-slate-600 font-bold text-lg"
-        >
-          ✕
-        </button>
-      </div>
-
-      {/* Contenido (Cambiamos max-h por overflow-visible o dejamos que fluya) */}
-      <div className="p-6 space-y-4 overflow-visible">
-        <RutaForm
-          rutaAEditar={rutaAEditar}
-          onCancelEdit={handleCerrarModal}
-          onSuccess={() => {
-            handleCerrarModal();
-            refrescarTabla();
-          }}
-        />
-      </div>
-    </div>
-  </div>
-
+      {modalAbierto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full my-8 flex flex-col relative overflow-visible">
+            <div className="flex justify-between items-center border-b px-6 py-4 bg-white sticky top-0 z-30 rounded-t-2xl">
+              <h2 className="text-lg font-bold text-slate-800">
+                {rutaAEditar ? 'Editar Ruta' : 'Nueva Ruta'}
+              </h2>
+              <button
+                type="button"
+                onClick={handleCerrarModal}
+                className="text-slate-400 hover:text-slate-600 font-bold text-lg"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 space-y-4 overflow-visible">
+              <RutaForm
+                rutaAEditar={rutaAEditar}
+                onCancelEdit={handleCerrarModal}
+                onSuccess={() => {
+                  handleCerrarModal();
+                  refrescarTabla();
+                }}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

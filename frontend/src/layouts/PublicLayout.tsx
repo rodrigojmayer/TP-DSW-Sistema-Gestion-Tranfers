@@ -11,7 +11,6 @@ export function PublicLayout() {
         </main>
       </div>
 
-      {/* Footer simple estilo comercial */}
       <footer className="bg-white border-t border-gray-200 py-6 text-center text-xs text-gray-500">
         <p>
           © {new Date().getFullYear()} TransferApp. Todos los derechos

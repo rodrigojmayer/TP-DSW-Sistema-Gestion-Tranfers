@@ -26,7 +26,7 @@ export const UsuarioForm = ({
   } = useForm<UsuarioFormData>({
     resolver: zodResolver(
       usuarioSchema,
-    ) as unknown as Resolver<UsuarioFormData>, // <-- Tipado 100% seguro sin 'any'
+    ) as unknown as Resolver<UsuarioFormData>, 
     defaultValues: {
       usuario: '',
       password: '',
@@ -42,7 +42,6 @@ export const UsuarioForm = ({
   });
 
   const rolSeleccionado = useWatch({ control, name: 'rol' });
-  // Escucha cambios en 'usuarioAEditar' para rellenar o limpiar el formulario
   useEffect(() => {
     if (usuarioAEditar) {
       reset({
@@ -74,15 +73,12 @@ export const UsuarioForm = ({
 
   const onSubmit = async (data: UsuarioFormData) => {
     try {
-      // 1. Clonamos el objeto enviado por el formulario
       const payload: Partial<UsuarioFormData> = { ...data };
 
-      // 2. Si la contraseña no se ingresó o está vacía, no la enviamos
       if (!payload.password || payload.password === '') {
         delete payload.password;
       }
 
-      // 3. Limpiamos campos condicionales para evitar enviar cadenas vacías ("")
       if (payload.rol !== 'CHOFER') {
         delete payload.nroLicencia;
         delete payload.vencimientoLicencia;
@@ -91,7 +87,6 @@ export const UsuarioForm = ({
         if (!payload.vencimientoLicencia) delete payload.vencimientoLicencia;
       }
 
-      // 4. Petición según corresponda (Creación o Edición)
       if (usuarioAEditar) {
         const idValido = usuarioAEditar.idUsuario || usuarioAEditar.id;
 
@@ -114,96 +109,93 @@ export const UsuarioForm = ({
   };
 
   return (
-      
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <Input
+        label="Usuario (Alias)"
+        error={errors.usuario?.message}
+        {...register('usuario')}
+      />
+      <Input
+        label="Password"
+        error={errors.usuario?.message}
+        {...register('password')}
+      />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
         <Input
-          label="Usuario (Alias)"
-          error={errors.usuario?.message}
-          {...register('usuario')}
+          label="Nombre"
+          error={errors.nombre?.message}
+          {...register('nombre')}
         />
         <Input
-          label="Password"
-          // type='password'
-          error={errors.usuario?.message}
-          {...register('password')}
+          label="Apellido"
+          error={errors.apellido?.message}
+          {...register('apellido')}
         />
+      </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Nombre"
-            error={errors.nombre?.message}
-            {...register('nombre')}
-          />
-          <Input
-            label="Apellido"
-            error={errors.apellido?.message}
-            {...register('apellido')}
-          />
-        </div>
+      <Input
+        label="DNI"
+        type="text"
+        error={errors.dni?.message}
+        {...register('dni')}
+        placeholder="Ej: 32111222"
+      />
 
-        <Input
-          label="DNI"
-          type="text"
-          error={errors.dni?.message}
-          {...register('dni')}
-          placeholder="Ej: 32111222"
-        />
+      <Input
+        label="Email"
+        type="email"
+        error={errors.email?.message}
+        {...register('email')}
+      />
+      <Input
+        label="Teléfono"
+        error={errors.telefono?.message}
+        {...register('telefono')}
+      />
 
-        <Input
-          label="Email"
-          type="email"
-          error={errors.email?.message}
-          {...register('email')}
-        />
-        <Input
-          label="Teléfono"
-          error={errors.telefono?.message}
-          {...register('telefono')}
-        />
-
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">
-            Rol del Empleado
-          </label>
-          <select
-            {...register('rol')}
-            className="px-3 py-2 border border-slate-300 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white"
-          >
-            <option value="OPERADOR">Operador</option>
-            <option value="CHOFER">Chofer</option>
-            <option value="ADMIN">Administrador</option>
-            <option value="CLIENTE">Cliente</option>
-          </select>
-          {errors.rol && (
-            <span className="text-xs text-red-500 font-medium">
-              {errors.rol.message}
-            </span>
-          )}
-        </div>
-
-        {rolSeleccionado === 'CHOFER' && (
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-md space-y-4 animate-in fade-in slide-in-from-top-2">
-            <h3 className="text-sm font-semibold text-slate-800">
-              Datos Legales del Chofer
-            </h3>
-            <Input
-              label="Número de Licencia"
-              error={errors.nroLicencia?.message}
-              {...register('nroLicencia')}
-            />
-            <Input
-              type="date"
-              label="Vencimiento Licencia"
-              error={errors.vencimientoLicencia?.message}
-              {...register('vencimientoLicencia')}
-            />
-          </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-slate-700">
+          Rol del Empleado
+        </label>
+        <select
+          {...register('rol')}
+          className="px-3 py-2 border border-slate-300 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+        >
+          <option value="OPERADOR">Operador</option>
+          <option value="CHOFER">Chofer</option>
+          <option value="ADMIN">Administrador</option>
+          <option value="CLIENTE">Cliente</option>
+        </select>
+        {errors.rol && (
+          <span className="text-xs text-red-500 font-medium">
+            {errors.rol.message}
+          </span>
         )}
+      </div>
 
-        <Button type="submit" isLoading={isSubmitting}>
-          {usuarioAEditar ? 'Guardar Cambios' : 'Guardar Registro'}
-        </Button>
-      </form>
+      {rolSeleccionado === 'CHOFER' && (
+        <div className="p-4 bg-slate-50 border border-slate-200 rounded-md space-y-4 animate-in fade-in slide-in-from-top-2">
+          <h3 className="text-sm font-semibold text-slate-800">
+            Datos Legales del Chofer
+          </h3>
+          <Input
+            label="Número de Licencia"
+            error={errors.nroLicencia?.message}
+            {...register('nroLicencia')}
+          />
+          <Input
+            type="date"
+            label="Vencimiento Licencia"
+            error={errors.vencimientoLicencia?.message}
+            {...register('vencimientoLicencia')}
+          />
+        </div>
+      )}
+
+      <Button type="submit" isLoading={isSubmitting}>
+        {usuarioAEditar ? 'Guardar Cambios' : 'Guardar Registro'}
+      </Button>
+    </form>
   );
 };

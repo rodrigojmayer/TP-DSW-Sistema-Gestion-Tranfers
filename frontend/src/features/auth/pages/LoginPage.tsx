@@ -13,7 +13,6 @@ export const LoginPage = () => {
   const token = useAuthStore((state) => state.token); 
   const navigate = useNavigate();
 
-  // Redirigir automáticamente si el usuario ya está autenticado
   useEffect(() => {
     if (token) {
       navigate('/', { replace: true });
@@ -28,10 +27,8 @@ export const LoginPage = () => {
     try {
       const data = await authService.login({ identificador, password });
       
-      // Guarda usuario y token en el estado global
       loginStore(data.usuario, data.token);
 
-      // Redirige a la página principal
       navigate('/', { replace: true });
     } catch (error: unknown) {
       const err = error as Error;

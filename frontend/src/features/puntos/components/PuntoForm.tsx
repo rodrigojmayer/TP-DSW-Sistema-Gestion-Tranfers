@@ -39,7 +39,6 @@ export const PuntoForm = ({
         nombre: puntoAEditar.nombre || '',
         direccion: puntoAEditar.direccion || '',
         tipo: puntoAEditar.tipo || 'Terminal',
-        // ARREGLO: Se convierte a string para coincidir con la estructura de PuntoFormData
         latitud: puntoAEditar.latitud !== undefined && puntoAEditar.latitud !== null 
           ? String(puntoAEditar.latitud) 
           : '',
@@ -48,7 +47,6 @@ export const PuntoForm = ({
           : '',
       });
     } else {
-      // ARREGLO: Se limpian como '' en lugar de 0
       reset({
         nombre: '',
         direccion: '',
@@ -60,7 +58,6 @@ export const PuntoForm = ({
   }, [puntoAEditar, reset]);
 
   const onSubmit = async (data: PuntoFormData) => {
-    console.log("puntoAEditar: ", puntoAEditar);
     if (puntoAEditar) {
       await puntoService.actualizar(puntoAEditar.idPunto, data);
     } else {
@@ -104,7 +101,6 @@ export const PuntoForm = ({
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {/* ARREGLO: type="text" para ser coherente con la entrada de tipo string */}
           <Input
             label="Latitud"
             type="text"

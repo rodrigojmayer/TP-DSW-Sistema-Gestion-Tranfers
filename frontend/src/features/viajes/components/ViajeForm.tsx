@@ -1,4 +1,3 @@
-// src/features/viajes/components/ViajeForm.tsx
 import { useEffect, useState, useRef } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -101,9 +100,19 @@ export const ViajeForm = ({
     }
   };
 
+  const obtenerFechaHoraActualLocal = () => {
+    const ahora = new Date();
+    const pad = (n: number) => (n < 10 ? `0${n}` : n);
+    const anio = ahora.getFullYear();
+    const mes = pad(ahora.getMonth() + 1);
+    const dia = pad(ahora.getDate());
+    const hora = pad(ahora.getHours());
+    const minuto = pad(ahora.getMinutes());
+    return `${anio}-${mes}-${dia}T${hora}:${minuto}`;
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {/* Autocompletar Ruta */}
       <InputAutocompletarRuta
         etiqueta="Ruta Asignada"
         rutas={rutasDisponibles}
@@ -112,7 +121,6 @@ export const ViajeForm = ({
         error={errors.idRuta?.message}
       />
 
-      {/* Autocompletar Chofer */}
       <InputAutocompletarChofer
         etiqueta="Chofer Responsable"
         choferes={choferesDisponibles}
@@ -121,9 +129,7 @@ export const ViajeForm = ({
         error={errors.idChofer?.message}
       />
 
-      {/* Fechas distribuidas con restricciones cruzadas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-        {/* Fecha Salida */}
         <div className="flex flex-col gap-1 w-full">
           <label className="text-sm font-medium text-slate-700">Fecha/Hora Salida</label>
           <div className="relative flex items-center w-full">
@@ -133,6 +139,7 @@ export const ViajeForm = ({
                 <>
                   <input
                     type="datetime-local"
+                    min={obtenerFechaHoraActualLocal()}
                     max={watch('fechaHoraFin') || ''}
                     className="w-full text-sm pl-3 pr-10 py-2 border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 text-slate-700 cursor-pointer"
                     {...rest}
@@ -160,7 +167,6 @@ export const ViajeForm = ({
           )}
         </div>
 
-        {/* Fecha Llegada */}
         <div className="flex flex-col gap-1 w-full">
           <label className="text-sm font-medium text-slate-700">Fecha/Hora Llegada</label>
           <div className="relative flex items-center w-full">
@@ -198,7 +204,6 @@ export const ViajeForm = ({
         </div>
       </div>
 
-      {/* Capacidades (Sin flechitas y sin negativos) */}
       <div className="grid grid-cols-2 gap-3">
         <Input
           type="number"
@@ -220,7 +225,6 @@ export const ViajeForm = ({
         />
       </div>
 
-      {/* Precio (Sin flechitas y sin negativos) */}
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-slate-700">
           Precio del Pasaje
@@ -252,9 +256,6 @@ export const ViajeForm = ({
   );
 };
 
-// ==========================================
-// SUBCOMPONENTE AUTOCOMPLETAR RUTA
-// ==========================================
 interface InputAutocompletarRutaProps {
   etiqueta: string;
   rutas: Ruta[];
@@ -339,9 +340,6 @@ const InputAutocompletarRuta = ({
   );
 };
 
-// ==========================================
-// SUBCOMPONENTE AUTOCOMPLETAR CHOFER
-// ==========================================
 interface InputAutocompletarChoferProps {
   etiqueta: string;
   choferes: Usuario[];

@@ -1,4 +1,3 @@
-// src/features/puntos/pages/PuntosPage.tsx
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { puntoService } from '../api/puntoService';
 import { PuntoForm } from '../components/PuntoForm';
@@ -12,7 +11,6 @@ export const PuntosPage = () => {
   const [busqueda, setBusqueda] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
 
-  // Estados de Paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const elementosPorPagina = 10;
 
@@ -44,8 +42,6 @@ export const PuntosPage = () => {
       cancelado = true;
     };
   }, []);
-
-  // Bloquear el scroll de la página principal al abrir el modal
   useEffect(() => {
     if (modalAbierto) {
       document.body.style.overflow = 'hidden';
@@ -123,7 +119,6 @@ export const PuntosPage = () => {
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* 1. HEADER PRINCIPAL */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-bold text-gray-900">Gestión de Puntos</h1>
@@ -152,7 +147,6 @@ export const PuntosPage = () => {
         </div>
       </div>
 
-      {/* 2. BARRA DE BÚSQUEDA */}
       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -169,7 +163,6 @@ export const PuntosPage = () => {
         </div>
       </div>
 
-      {/* 3. TABLA PRINCIPAL DE PUNTOS */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-bold text-slate-800">Puntos / Paradas</h2>
@@ -237,7 +230,6 @@ export const PuntosPage = () => {
               </table>
             </div>
 
-            {/* CONTROLES DE PAGINACIÓN */}
             {totalPaginas > 1 && (
               <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <span className="text-xs text-slate-500">
@@ -286,11 +278,9 @@ export const PuntosPage = () => {
         )}
       </div>
 
-      {/* 4. MODAL FLOTANTE OCULTO PARA CREAR / EDITAR PUNTO */}
       {modalAbierto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-hidden">
           <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full max-h-[85vh] flex flex-col relative overflow-hidden">
-            {/* Header Fijo */}
             <div className="flex justify-between items-center border-b px-6 py-4 bg-white sticky top-0 z-10">
               <h2 className="text-lg font-bold text-slate-800">
                 {puntoAEditar ? 'Editar Punto' : 'Nuevo Punto'}
@@ -304,7 +294,6 @@ export const PuntosPage = () => {
               </button>
             </div>
 
-            {/* Contenido con scroll interno */}
             <div className="p-6 space-y-4 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
               <PuntoForm
                 puntoAEditar={puntoAEditar}

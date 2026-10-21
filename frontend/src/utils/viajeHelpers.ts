@@ -1,6 +1,4 @@
-// src/utils/viajeHelpers.ts
-
-import type { Viaje, Punto, PuntoRutaBackend, PuntoGeografico } from '../types/index'; // Ajusta la ruta relativa hacia tu archivo de interfaces/types
+import type { Viaje, Punto, PuntoRutaBackend, PuntoGeografico } from '../types/index'; 
 
 export interface PuntoNormalizado {
   orden: number;
@@ -13,10 +11,6 @@ export interface PuntoNormalizado {
   };
 }
 
-/**
- * Normaliza la obtención del nombre de un punto probando
- * las distintas propiedades posibles que envía el backend/DB o las estructuras del cliente.
- */
 export const obtenerNombrePunto = (
   punto?:
     | Punto
@@ -26,29 +20,21 @@ export const obtenerNombrePunto = (
     | null,
 ): string => {
   if (!punto) return 'Punto no especificado';
-
   if (typeof punto === 'string') {
     return punto;
   }
-
   return punto.nombre || punto.direccion || 'Ubicación sin nombre';
 };
 
-/**
- * Mapea y ordena secuencialmente los puntos de la ruta
- * resolviendo diferencias entre la ruta del viaje y sus puntos asociados.
- */
 export const obtenerPuntosNormalizados = (
   viaje?: Viaje | null,
 ): PuntoNormalizado[] => {
   if (!viaje) return [];
 
-  // Extrae los puntos de la relación con RutaBackend o del arreglo punto_ruta
   const puntosBrutos: PuntoRutaBackend[] =
     (viaje.ruta?.puntos as PuntoRutaBackend[]) || viaje.punto_ruta || [];
 
   const elementos: PuntoNormalizado[] = puntosBrutos.map((item, index) => {
-    // Si viene la entidad 'punto' la usamos; de lo contrario armamos la estructura con los datos disponibles
     const entidadPunto = item.punto
       ? {
           id: item.punto.id,

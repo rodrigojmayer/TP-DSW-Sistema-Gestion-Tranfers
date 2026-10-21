@@ -4,16 +4,13 @@ import {
   Calendar,
   Clock,
   Users,
-  //Car,
   DollarSign,
   XCircle,
   AlertCircle,
 } from 'lucide-react';
 
-// 1. Importación de las interfaces globales de tu proyecto
-import type { Viaje } from '../../../types/'; // Ajusta la ruta a tu archivo de interfaces
+import type { Viaje } from '../../../types/';
 
-// 2. Importación de los helpers centralizados
 import {
   obtenerNombrePunto,
   obtenerPuntosNormalizados,
@@ -31,7 +28,6 @@ export const ViajeDetalleContent: React.FC<ViajeDetalleContentProps> = ({
   const puntosRuta = obtenerPuntosNormalizados(viaje);
   const esPrivado = viaje.tipo?.toUpperCase() === 'PRIVADO';
 
-  // --- Normalización de Fechas e Información ---
   const fechaObjeto = viaje.fechaHoraInicio
     ? new Date(viaje.fechaHoraInicio)
     : null;
@@ -47,7 +43,6 @@ export const ViajeDetalleContent: React.FC<ViajeDetalleContentProps> = ({
         })
       : 'N/A';
 
-  // Normalización del Chofer (puede ser string u objeto)
   const choferNombre =
     typeof viaje.chofer === 'object' && viaje.chofer !== null
       ? `${viaje.chofer.nombre || ''} ${viaje.chofer.apellido || ''}`.trim()
@@ -57,7 +52,6 @@ export const ViajeDetalleContent: React.FC<ViajeDetalleContentProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-2xl w-full mx-auto my-4 border border-slate-200">
-      {/* Encabezado Modal */}
       <div className="bg-slate-900 text-white p-4 sm:p-6 flex justify-between items-center">
         <div>
           <span className="text-xs font-semibold tracking-wider uppercase px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
@@ -79,7 +73,6 @@ export const ViajeDetalleContent: React.FC<ViajeDetalleContentProps> = ({
       </div>
 
       <div className="p-4 sm:p-6 space-y-6">
-        {/* Resumen General */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
           <div className="flex items-center gap-2 text-slate-700">
             <Calendar className="w-4 h-4 text-slate-500" />
@@ -116,7 +109,6 @@ export const ViajeDetalleContent: React.FC<ViajeDetalleContentProps> = ({
           </div>
         </div>
 
-        {/* Itinerario de la Ruta */}
         <div>
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
             Itinerario y Recorrido
@@ -140,7 +132,6 @@ export const ViajeDetalleContent: React.FC<ViajeDetalleContentProps> = ({
                     key={item.punto.id || idx}
                     className="relative flex items-start justify-between gap-4"
                   >
-                    {/* Indicador visual de punto */}
                     <span
                       className={`absolute -left-6 top-1 w-4 h-4 rounded-full border-2 bg-white flex items-center justify-center ${
                         item.tipo === 'ORIGEN'
@@ -151,7 +142,6 @@ export const ViajeDetalleContent: React.FC<ViajeDetalleContentProps> = ({
                       }`}
                     />
 
-                    {/* Información del Lugar */}
                     <div>
                       <p className="text-xs font-semibold text-slate-400 uppercase">
                         {item.tipo ||
@@ -173,7 +163,6 @@ export const ViajeDetalleContent: React.FC<ViajeDetalleContentProps> = ({
                         )}
                     </div>
 
-                    {/* Disponibilidad por Tramo */}
                     {!esPrivado && !esUltimo && (
                       <div className="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-md text-right border border-slate-200 shrink-0">
                         <span className="block font-medium">
@@ -191,7 +180,6 @@ export const ViajeDetalleContent: React.FC<ViajeDetalleContentProps> = ({
           )}
         </div>
 
-        {/* Información del Conductor */}
         {viaje.chofer && (
           <div className="pt-4 border-t border-slate-100 grid grid-cols-1 gap-4">
             <div className="flex items-center gap-3">

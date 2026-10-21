@@ -1,4 +1,3 @@
-// File: src/features/viajes/hooks/useOcupacionViaje.ts
 import { useState, useEffect } from 'react';
 import { viajeService } from '../api/viajeService';
 
@@ -21,9 +20,7 @@ export function useOcupacionViaje(viajeId?: string | number) {
 
   useEffect(() => {
     if (!viajeId) return;
-
     let cancelado = false;
-
     const cargarOcupacion = async () => {
       setLoading(true);
       setError(null);
@@ -32,7 +29,7 @@ export function useOcupacionViaje(viajeId?: string | number) {
 
         if (!cancelado) {
           const asientosTotales = viaje.capacidadPasajeros || 0;
-          const asientosOcupados = 0; // Aquí podés vincular pasajes o reservas vendidas cuando existan
+          const asientosOcupados = 0; 
           const asientosDisponibles = Math.max(
             0,
             asientosTotales - asientosOcupados,

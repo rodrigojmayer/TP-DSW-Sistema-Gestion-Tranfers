@@ -22,7 +22,6 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
     throw new Error(errorData.error || errorData.detalle || 'Error en la petición');
   }
 
-  // Para respuestas sin contenido (204 No Content)
   if (response.status === 204) {
     return {} as T;
   }

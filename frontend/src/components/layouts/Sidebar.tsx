@@ -3,7 +3,6 @@ import {
   UsersIcon,
   MapIcon,
   MapPinIcon,
-  // PaperAirplaneIcon,
   TruckIcon,
   ClipboardDocumentCheckIcon,
 } from '@heroicons/react/24/outline';
@@ -20,7 +19,6 @@ export const Sidebar = () => {
     { label: 'Reservas', path: '/reservas', roles: ['ADMIN', 'OPERADOR', 'CLIENTE', 'CHOFER'], publico: false, icon: ClipboardDocumentCheckIcon },
   ];
 
-  // Filtramos los ítems a los que el usuario tiene acceso
   const itemsFiltrados = menuItems.filter(
     (item) => item.publico || (user?.rol && item.roles.includes(user.rol))
   );

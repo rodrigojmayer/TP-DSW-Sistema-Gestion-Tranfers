@@ -9,7 +9,6 @@ interface AuthState {
   logout: () => void;
 }
 
-// Helper para recuperar la sesión guardada al recargar la página
 const storedToken = localStorage.getItem('token');
 const storedUser = localStorage.getItem('usuario');
 

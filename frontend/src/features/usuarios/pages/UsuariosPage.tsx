@@ -1,4 +1,3 @@
-// src/features/usuarios/pages/UsuariosPage.tsx
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { usuarioService } from '../api/usuarioService';
 import { type Usuario } from '../../../types';
@@ -15,7 +14,6 @@ export const UsuariosPage = () => {
   const [busqueda, setBusqueda] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
 
-  // Estados de Paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const elementosPorPagina = 10;
 
@@ -305,7 +303,6 @@ export const UsuariosPage = () => {
               </table>
             </div>
 
-            {/* CONTROLES DE PAGINACIÓN */}
             {totalPaginas > 1 && (
               <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <span className="text-xs text-slate-500">

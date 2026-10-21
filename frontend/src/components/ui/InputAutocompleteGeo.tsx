@@ -29,7 +29,7 @@ export const InputAutocompleteGeo = ({
       } else {
         setSugerencias([]);
       }
-    }, 400); // Debounce de 400ms para cuidar el límite de solicitudes de OSM
+    }, 400); 
 
     return () => clearTimeout(timer);
   }, [value, mostrarDropdown]);
@@ -80,12 +80,10 @@ export const InputAutocompleteGeo = ({
 const formatearDireccionCorta = (direccionLarga: string): string => {
   if (!direccionLarga) return '';
 
-  // 1. Separar la dirección por comas
   const partes = direccionLarga.split(',').map((p) => p.trim());
 
   if (partes.length <= 2) return direccionLarga;
 
-  // Palabras a ignorar que suelen ensuciar la dirección
   const palabrasIgnorar = [
     'Distrito',
     'Municipio',
@@ -96,7 +94,6 @@ const formatearDireccionCorta = (direccionLarga: string): string => {
     'Argentina',
   ];
 
-  // Filtramos partes basura (códigos postales, países, regiones administrativas)
   const partesFiltradas = partes.filter(
     (parte) =>
       !/^\d{4,5}$/.test(parte) && 
@@ -104,14 +101,10 @@ const formatearDireccionCorta = (direccionLarga: string): string => {
       !palabrasIgnorar.some((p) => parte.toLowerCase().includes(p.toLowerCase()))
   );
 
-  // Si tenemos suficientes partes, queremos conservar:
-  // - La calle / altura (ej: "Zeballos 1234" o "Zeballos")
-  // - El barrio o localidad principal
   const calleOAltura = partesFiltradas[0] || partes[0];
   const localidadOBarrio = partesFiltradas.length > 1 ? partesFiltradas[1] : partes[1];
   const ciudadPrincipal = partesFiltradas[partesFiltradas.length - 1] || '';
 
-  // Evitamos duplicar si la ciudad ya figura en el nombre de la calle/barrio
   if (calleOAltura.toLowerCase().includes(ciudadPrincipal.toLowerCase())) {
     return calleOAltura;
   }

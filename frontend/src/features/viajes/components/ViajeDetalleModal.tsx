@@ -41,7 +41,6 @@ export const ViajeDetalleModal = ({
           </button>
         </div>
 
-        {/* Body */}
         <div className="p-6 overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-600 border border-slate-200 rounded-lg overflow-hidden">
             <thead className="bg-slate-100 text-slate-700 font-semibold text-xs uppercase">
@@ -96,7 +95,6 @@ export const ViajeDetalleModal = ({
           </table>
         </div>
 
-        {/* Footer Modal incluido dentro del componente modal */}
         <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
           <button
             onClick={onClose}
