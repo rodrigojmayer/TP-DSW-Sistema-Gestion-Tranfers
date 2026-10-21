@@ -6,15 +6,18 @@
 * 36640 - Mayer, Rodrigo
 
 ### Repositorios
-* [frontend app](http://hyperlinkToGihubOrGitlab)
-* [backend app](http://hyperlinkToGihubOrGitlab)
+* [frontend app](https://github.com/rodrigojmayer/TP-DSW-Sistema-Gestion-Tranfers)
+* [backend app](https://github.com/rodrigojmayer/TP-DSW-Sistema-Gestion-Tranfers-Backend)
 
 ## Tema
 TMS - Transport Management System
 ### Descripción
 Aplicación web orientada a la gestión integral de reservas de servicios de transporte, permitiendo a los usuarios solicitar viajes indicando origen, destino, fecha, horario, cantidad de pasajeros y requerimientos específicos, facilitando la asignación y administración eficiente de vehículos y reservas.
 
-### Modelo
+### Modelo de dominio
+![imagen del modelo](./Modelodedominio.png)
+
+### Diagrama de clases
 ![imagen del modelo](./TPDesarrollodeSoftware-Diagramadeclases.png)
 
 ## Alcance Funcional 
