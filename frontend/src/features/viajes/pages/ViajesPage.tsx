@@ -6,6 +6,7 @@ import { usuarioService } from '../../usuarios/api/usuarioService';
 import { ViajeForm } from '../components/ViajeForm';
 import { useAuthStore } from '../../../store/authStore';
 import { Plus, RefreshCw, Search, Truck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { DetalleViajePublicoContent } from '../components/DetalleViajePublicoContent'; // o la ruta donde esté ubicado
 
 export const ViajesPage = () => {
   const user = useAuthStore((state) => state.user);
@@ -22,6 +23,8 @@ export const ViajesPage = () => {
   const [modalAbierto, setModalAbierto] = useState(false);
 
   const [paginaActual, setPaginaActual] = useState(1);
+  const [viajeSeleccionadoParaDetalle, setViajeSeleccionadoParaDetalle] = useState<Viaje | null>(null);
+
   const elementosPorPagina = 10;
 
   const refrescarDatos = async () => {
@@ -194,7 +197,7 @@ export const ViajesPage = () => {
     }
   };
 
-  return (
+return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -280,7 +283,11 @@ export const ViajesPage = () => {
                     const idViajeActual = v.id || (v as { idViaje?: string }).idViaje || String(idx);
 
                     return (
-                      <tr key={idViajeActual} className="hover:bg-slate-50 transition-colors">
+                      <tr 
+                        key={idViajeActual} 
+                        onClick={() => setViajeSeleccionadoParaDetalle(v)} 
+                        className="hover:bg-amber-50/40 transition-colors cursor-pointer"
+                      >
                         <td className="py-3 px-4 font-medium text-slate-900">
                           <div>{obtenerNombreRutaTexto(v)}</div>
                           <span className="text-xs text-amber-600 font-semibold">{v.tipo || 'COMPARTIDO'}</span>
@@ -300,7 +307,7 @@ export const ViajesPage = () => {
                           ${v.precio ?? 0}
                         </td>
                         {esAdminOrOperador && (
-                          <td className="py-3 px-4 text-right space-x-3">
+                          <td className="py-3 px-4 text-right space-x-3" onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => abrirModalEditar(v)}
                               className="text-amber-600 hover:text-amber-800 font-semibold text-xs transition cursor-pointer"
@@ -370,6 +377,7 @@ export const ViajesPage = () => {
         )}
       </div>
 
+      {/* Modal de Crear / Editar Viaje (Administrador) */}
       {modalAbierto && esAdminOrOperador && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-hidden">
           <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full max-h-[85vh] flex flex-col relative overflow-hidden">
@@ -399,6 +407,18 @@ export const ViajesPage = () => {
                 onCancelar={cerrarModal}
               />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🟢 Modal de Detalle del Viaje al hacer click en la fila */}
+      {viajeSeleccionadoParaDetalle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[85vh] flex flex-col relative overflow-hidden">
+            <DetalleViajePublicoContent
+              viaje={viajeSeleccionadoParaDetalle}
+              onClose={() => setViajeSeleccionadoParaDetalle(null)}
+            />
           </div>
         </div>
       )}

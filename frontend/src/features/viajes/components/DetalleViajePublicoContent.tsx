@@ -25,15 +25,15 @@ export const DetalleViajePublicoContent = ({
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  const origenTexto =
-    typeof viaje.origen === 'string'
-      ? viaje.origen
-      : viaje.origen?.nombre || 'Origen no especificado';
+  // const origenTexto =
+  //   typeof viaje.origen === 'string'
+  //     ? viaje.origen
+  //     : viaje.origen?.nombre || 'Origen no especificado';
 
-  const destinoTexto =
-    typeof viaje.destino === 'string'
-      ? viaje.destino
-      : viaje.destino?.nombre || 'Destino no especificado';
+  // const destinoTexto =
+  //   typeof viaje.destino === 'string'
+  //     ? viaje.destino
+  //     : viaje.destino?.nombre || 'Destino no especificado';
 
   const listaParadas = viaje.paradas || [];
 
@@ -86,8 +86,7 @@ export const DetalleViajePublicoContent = ({
         </button>
       </div>
 
-      <div className="p-6 space-y-6 overflow-y-auto grow">
-        <div className="grid grid-cols-3 gap-3">
+      <div className="p-6 space-y-6 overflow-y-auto grow [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">  <div className="grid grid-cols-3 gap-3">
           <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-center">
             <div className="flex justify-center text-slate-400 mb-1">
               <Users className="w-4 h-4" />
@@ -135,9 +134,9 @@ export const DetalleViajePublicoContent = ({
                 <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                   ORIGEN
                 </span>
-                <p className="text-sm font-semibold text-slate-800 mt-0.5">
+                {/* <p className="text-sm font-semibold text-slate-800 mt-0.5">
                   {origenTexto}
-                </p>
+                </p> */}
               </div>
             </div>
 
@@ -181,9 +180,9 @@ export const DetalleViajePublicoContent = ({
                 <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
                   DESTINO
                 </span>
-                <p className="text-sm font-semibold text-slate-800 mt-0.5">
+                {/* <p className="text-sm font-semibold text-slate-800 mt-0.5">
                   {destinoTexto}
-                </p>
+                </p> */}
               </div>
             </div>
           </div>
